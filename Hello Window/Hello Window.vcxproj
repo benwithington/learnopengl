@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{3a58a9a4-096f-4a54-ad57-29270eb98640}</ProjectGuid>
-    <RootNamespace>OpenGLHellowWindow</RootNamespace>
+    <ProjectGuid>{dd7c7101-d61f-45a1-9d27-d5334be0afa1}</ProjectGuid>
+    <RootNamespace>HelloWindow</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -142,7 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\Libraries\C++\glad\src\glad.c" />
+    <ClCompile Include="..\..\..\..\Libraries\C++\glad\src\glad.c" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
