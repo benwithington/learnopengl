@@ -178,6 +178,20 @@ int main() {
 	ourShader.setMat4("view", view);
 	ourShader.setMat4("projection", projection);
 
+
+	/*
+		Camera Stuff
+	*/
+	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp, cameraDirection));
+	glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+
+
+	/**/
+
 	glEnable(GL_DEPTH_TEST);
 
 	while (!glfwWindowShouldClose(window)) {
@@ -197,6 +211,12 @@ int main() {
 		containerTexture.Bind();
 		glActiveTexture(GL_TEXTURE1);
 		awesomefaceTexture.Bind();
+
+		const float radius = 10.0f;
+		float camX = sin(glfwGetTime()) * radius;
+		float camZ = cos(glfwGetTime()) * radius;
+		view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		ourShader.setMat4("view", view);
 
 		glBindVertexArray(VAO);
 		/*
