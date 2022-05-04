@@ -23,8 +23,10 @@ Texture::Texture(std::string texturePath) {
 	if (data)
 	{
 		
-		std::string result = texturePath.substr((texturePath.find_last_of(".") + 1));
-		GLenum imageFormat = (result == "jpg") ? GL_RGB : GL_RGBA;
+		GLenum imageFormat{ GL_RGB };
+		if      (nrChannels == 1) imageFormat = GL_RED;
+		else if (nrChannels == 3) imageFormat = GL_RGB;
+		else if (nrChannels == 4) imageFormat = GL_RGBA;
 
 		glTexImage2D(GL_TEXTURE_2D, 0, imageFormat, width, height, 0, imageFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);

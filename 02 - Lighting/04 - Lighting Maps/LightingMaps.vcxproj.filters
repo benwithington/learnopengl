@@ -52,6 +52,15 @@
     <Image Include="Textures\wall.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Textures\container2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Textures\container2_specular.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Textures\container2_emission.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\shader.frag" />
