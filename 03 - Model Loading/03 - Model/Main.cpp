@@ -67,9 +67,12 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 
-	Shader ourShader("./shaders/basic.vert", "./shaders/basic.frag");
-	Model backpack("./resources/objects/backpack/backpack.obj");
+	Shader basicShader("./shaders/basic.vert", "./shaders/basic.frag");
+	Shader lightingShader("./shaders/lighting.vert", "./shaders/lighting.frag");
+	//Model backpack("./resources/objects/backpack/backpack.obj");
 	Model ico("./resources/objects/icosphere/walled_icosphere.obj");
+	Model sponza("./resources/objects/sponza/sponza.obj");
+	//Model hat("./resources/objects/hat/hat_2.obj");
 
 
 	while (!glfwWindowShouldClose(window)) {
@@ -83,20 +86,26 @@ int main() {
 		processInput(window);
 
 		//Rendering
-		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		ourShader.use();
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		basicShader.use();
+		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
 		glm::mat4 view = camera.GetViewMatrix();
-		ourShader.setMat4("projection", projection);
-		ourShader.setMat4("view", view);
+		basicShader.setMat4("projection", projection);
+		basicShader.setMat4("view", view);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-		ourShader.setMat4("model", model);
-		backpack.Draw(ourShader);
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+		basicShader.setMat4("model", model);
+		sponza.Draw(basicShader);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+		basicShader.setMat4("model", model);
+		ico.Draw(basicShader);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

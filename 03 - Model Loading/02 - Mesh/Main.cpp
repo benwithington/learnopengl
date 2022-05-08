@@ -197,6 +197,7 @@ int main() {
 		lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
 		lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
 		lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+
 		// point light 1
 		lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
 		lightingShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
