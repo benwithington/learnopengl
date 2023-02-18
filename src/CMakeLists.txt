@@ -7,6 +7,8 @@ add_executable(${PROJECT_NAME}
     main.cpp
     shader.cpp
     camera.cpp
+    mesh.cpp
+    model.cpp
     ${GLAD_DIR}/src/glad.c
     ${STBI_DIR}/src/stbi.cpp
 )
