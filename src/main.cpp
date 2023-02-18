@@ -13,6 +13,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 //Personal Headers
 #include "shader.h"
@@ -84,6 +87,17 @@ int main() {
     // model).
     stbi_set_flip_vertically_on_load(true);
 
+    // IMGUI SETUP
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(window.get(), true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
     // Global opengl state
     glEnable(GL_DEPTH_TEST);
 
@@ -98,6 +112,13 @@ int main() {
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::ShowDemoWindow();
 
         processInput(window.get());
 
@@ -131,12 +152,19 @@ int main() {
         default_shader.setMat4("model", model);
         backpack.draw(default_shader);
 
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         /* Swap front and back buffers */
         glfwSwapBuffers(window.get());
 
         /* Poll for and process events */
         glfwPollEvents();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwTerminate();
     return EXIT_SUCCESS;
@@ -163,8 +191,20 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action,
     (void)scancode;
     (void)mods;
 
+    static bool isMouseDisabled = true;
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+
+    if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+        if (isMouseDisabled) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            isMouseDisabled = false;
+        } else {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            isMouseDisabled = true;
+        }
     }
 }
 
@@ -187,5 +227,7 @@ void mouse_callback(GLFWwindow*, double xpos, double ypos) {
     camera.processMouseMovement(xoffset, yoffset);
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    (void)window;
+    (void)xoffset;
     camera.processMouseScroll(static_cast<float>(yoffset));
 }

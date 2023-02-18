@@ -180,7 +180,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat,
 }
 
 unsigned int textureFromFile(const char* path, const std::string& directory,
-                             bool gamma) {
+                             [[maybe_unused]] bool gamma) {
     std::string filename = std::string(path);
     filename = directory + '/' + filename;
 
@@ -191,7 +191,7 @@ unsigned int textureFromFile(const char* path, const std::string& directory,
     unsigned char* data =
         stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     if (data) {
-        GLenum format;
+        GLenum format{};
         if (nrComponents == 1)
             format = GL_RED;
         else if (nrComponents == 3)

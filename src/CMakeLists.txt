@@ -22,6 +22,7 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
+target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${GLAD}/include/

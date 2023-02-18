@@ -9,5 +9,6 @@ project(learning_opengl)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_subdirectory(src)
