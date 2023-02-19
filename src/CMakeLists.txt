@@ -16,15 +16,17 @@ add_executable(${PROJECT_NAME}
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W3 /WX)
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Werror -O3)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Werror -O3 -lassimp)
 endif()
-
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
-target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
-target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${GLAD}/include/
     ${STBI_DIR}/include/
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    glfw
+    glm::glm
+    assimp::assimp
+    imgui::imgui
 )

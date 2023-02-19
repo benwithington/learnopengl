@@ -14,8 +14,8 @@ void Mesh::draw(Shader& shader) {
     unsigned int normalNr = 1;
     unsigned int heightNr = 1;
 
-    for (int i = 0; i < textures.size(); ++i) {
-        glActiveTexture(GL_TEXTURE0 + i);
+    for (long long unsigned int i = 0; i < textures.size(); ++i) {
+        glActiveTexture(GL_TEXTURE0 + static_cast<int>(i));
 
         std::string number;
         std::string name = textures[i].type;
@@ -30,7 +30,7 @@ void Mesh::draw(Shader& shader) {
             number = std::to_string(heightNr++);
 
         glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()),
-                    i);
+                    static_cast<int>(i));
 
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
