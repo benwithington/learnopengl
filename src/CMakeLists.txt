@@ -20,7 +20,7 @@ else()
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${GLAD}/include/
+    ${GLAD_DIR}/include/
     ${STBI_DIR}/include/
 )
 

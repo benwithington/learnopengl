@@ -109,7 +109,7 @@ int main() {
                                   "shaders/assimp.frag"};
 
     // Models
-    learning::Model backpack("res/models/backpack/backpack.obj");
+    // learning::Model backpack("res/models/backpack/backpack.obj");
 
     float cubeVertices[] = {
         // positions          // texture Coords
@@ -213,12 +213,14 @@ int main() {
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
+    int square = 512;
+
     // generate texture
     unsigned int textureColorbuffer;
     glGenTextures(1, &textureColorbuffer);
     glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_width, screen_height, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, square, square, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -230,8 +232,7 @@ int main() {
     unsigned int rbo;
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screen_width,
-                          screen_height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, square, square);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // attach it to currently bound framebuffer object
@@ -254,7 +255,7 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::ShowDemoWindow();
+        // ImGui::ShowDemoWindow();
 
         processInput(window.get());
 
@@ -272,9 +273,9 @@ int main() {
 
         default_shader.use();
         glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = camera.getViewMatrix();
+        glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(
-            glm::radians(camera.zoom),
+            glm::radians(camera.Zoom),
             (float)screen_width / (float)screen_height, 0.1f, 100.0f);
         default_shader.setMat4("view", view);
         default_shader.setMat4("projection", projection);
@@ -313,7 +314,31 @@ int main() {
         glBindTexture(GL_TEXTURE_2D,
                       textureColorbuffer);  // use the color attachment texture
                                             // as the texture of the quad plane
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // IMGUI
+        ImGui::Begin("Test");
+        {
+            GLint v[4];
+            glGetIntegerv(GL_VIEWPORT, v);
+
+            float tempSquare = static_cast<float>(square);
+
+            // ImGui::SetWindowSize(ImVec2(tempSquare, tempSquare));
+            // ImGui::SetWindowPos(ImVec2(100, 100));
+
+            glViewport(0, 0, square, square);
+
+            // Calculate the texture coordinates with flipped Y-axis
+            ImVec2 uv0 = ImVec2(0.0f, 1.0f);
+            ImVec2 uv1 = ImVec2(1.0f, 0.0f);
+
+            ImGui::Image((void*)(intptr_t)textureColorbuffer,
+                         ImVec2(tempSquare, tempSquare), uv0, uv1);
+
+            glViewport(0, 0, v[2], v[3]);
+        }
+        ImGui::End();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -345,13 +370,13 @@ int main() {
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.processKeyboard(FORWARD, deltaTime);
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.processKeyboard(BACKWARD, deltaTime);
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.processKeyboard(LEFT, deltaTime);
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.processKeyboard(RIGHT, deltaTime);
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 void framebuffer_size_callback(GLFWwindow*, int width, int height) {
@@ -379,6 +404,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action,
             isMouseDisabled = true;
         }
     }
+
+    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+        GLint mode{};
+        glGetIntegerv(GL_POLYGON_MODE, &mode);
+        if (mode == GL_FILL)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 
 void mouse_callback(GLFWwindow*, double xpos, double ypos) {
@@ -397,12 +431,12 @@ void mouse_callback(GLFWwindow*, double xpos, double ypos) {
     lastX = x;
     lastY = y;
 
-    camera.processMouseMovement(xoffset, yoffset);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     (void)window;
     (void)xoffset;
-    camera.processMouseScroll(static_cast<float>(yoffset));
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 unsigned int loadTexture(char const* path) {
     unsigned int textureID;
