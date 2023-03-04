@@ -12,7 +12,7 @@
 
 #define MAX_BONE_INFLUENCE 4
 
-namespace learning {
+namespace personal::renderer::utility {
 
 struct Vertex {
     glm::vec3 position;
@@ -48,6 +48,6 @@ class Mesh {
     void setupMesh();
 };
 
-}  // namespace learning
+}  // namespace personal::renderer::utility
 
 #endif  // MESH_H

@@ -2,7 +2,7 @@
 
 #include "stb_image.h"
 
-namespace learning {
+namespace personal::renderer::utility {
 
 Model::Model(const std::string& path, bool gamma) : gammaCorrection(gamma) {
     loadModel(path);
@@ -219,4 +219,4 @@ unsigned int textureFromFile(const char* path, const std::string& directory,
     return textureID;
 }
 
-};  // namespace learning
+};  // namespace personal::renderer::utility

@@ -14,7 +14,7 @@
 #include "mesh.h"
 /* clang-format on  */
 
-namespace learning {
+namespace personal::renderer::utility {
 
 unsigned int textureFromFile(const char* path, const std::string& directory,
                              bool gamma = false);

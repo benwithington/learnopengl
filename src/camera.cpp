@@ -1,5 +1,7 @@
 #include "camera.h"
 
+namespace personal::renderer::utility {
+
 Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
     : Front(glm::vec3(0.0f, 0.0f, -1.0f)),
       MovementSpeed(SPEED),
@@ -31,10 +33,10 @@ glm::mat4 Camera::GetViewMatrix() {
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime) {
     float velocity = MovementSpeed * deltaTime;
-    if (direction == FORWARD) Position += Front * velocity;
-    if (direction == BACKWARD) Position -= Front * velocity;
-    if (direction == LEFT) Position -= Right * velocity;
-    if (direction == RIGHT) Position += Right * velocity;
+    if (direction == Camera_Movement::FORWARD) Position += Front * velocity;
+    if (direction == Camera_Movement::BACKWARD) Position -= Front * velocity;
+    if (direction == Camera_Movement::LEFT) Position -= Right * velocity;
+    if (direction == Camera_Movement::RIGHT) Position += Right * velocity;
 }
 
 void Camera::ProcessMouseMovement(float xoffset, float yoffset,
@@ -78,3 +80,4 @@ void Camera::updateCameraVectors() {
                            // which results in slower movement.
     Up = glm::normalize(glm::cross(Right, Front));
 }
+}  // namespace personal::renderer::utility

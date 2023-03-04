@@ -1,6 +1,6 @@
 #include "mesh.h"
 
-namespace learning {
+namespace personal::renderer::utility {
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
            std::vector<Texture> textures)
@@ -94,4 +94,4 @@ void Mesh::setupMesh() {
                           (void*)offsetof(Vertex, m_Weights));
     glBindVertexArray(0);
 }
-}  // namespace learning
+}  // namespace personal::renderer::utility

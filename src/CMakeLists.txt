@@ -9,6 +9,8 @@ add_executable(${PROJECT_NAME}
     camera.cpp
     mesh.cpp
     model.cpp
+    window.cpp
+    texture.cpp
     ${GLAD_DIR}/src/glad.c
     ${STBI_DIR}/src/stbi.cpp
 )

@@ -9,8 +9,7 @@
 #include <sstream>
 #include <string>
 
-
-namespace learning {
+namespace personal::renderer::utility {
 
 class Shader {
    public:
@@ -42,5 +41,5 @@ class Shader {
     // ------------------------------------------------------------------------
     void checkCompileErrors(unsigned int shader, std::string type);
 };
-}  // namespace learning
+}  // namespace personal::renderer::utility
 #endif

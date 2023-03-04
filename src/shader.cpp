@@ -1,6 +1,6 @@
 #include "shader.h"
 
-namespace learning {
+namespace personal::renderer::utility {
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath) {
     // 1. retrieve the vertex/fragment source code from filePath
@@ -133,4 +133,4 @@ void Shader::checkCompileErrors(unsigned int shader, std::string type) {
         }
     }
 }
-}  // namespace learning
+}  // namespace personal::renderer::utility
