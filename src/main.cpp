@@ -24,7 +24,7 @@
 // clang-format on
 
 void processInput(GLFWwindow* window);
-unsigned int loadTexture(char const* path);
+unsigned int loadTexture(std::string path);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action,
@@ -32,16 +32,30 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action,
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-const int screen_width{1280};
-const int screen_height{720};
+struct State {
+    int screenWidth;
+    int screenHeight;
+    std::string title;
 
-Camera camera{glm::vec3(0.0f, 0.0f, 3.0f)};
-float lastX = screen_width / 2.0f;
-float lastY = screen_height / 2.0f;
-bool firstMouse{true};
+    Camera camera;
+    float lastX;
+    float lastY;
+    bool firstMouse;
 
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
+    float deltaTime;
+    float lastFrame;
+
+    State()
+        : screenWidth(1280),
+          screenHeight(720),
+          title("OpenGL"),
+          camera(Camera{glm::vec3(0.0f, 0.0f, 3.0f)}),
+          lastX(screenWidth / 2.0f),
+          lastY(screenHeight / 2.0f),
+          firstMouse(true),
+          deltaTime(0.0f),
+          lastFrame(0.0f) {}
+};
 
 int main() {
     /* Initialize the library */
@@ -57,10 +71,12 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);  // for mac
 #endif
 
+    State state{};
+
     /* Create a windowed mode window and its OpenGL context */
     std::unique_ptr<GLFWwindow, decltype(glfwDestroyWindow)*> window{
-        glfwCreateWindow(screen_width, screen_height, "OpenGL", nullptr,
-                         nullptr),
+        glfwCreateWindow(state.screenWidth, state.screenHeight,
+                         state.title.c_str(), nullptr, nullptr),
         glfwDestroyWindow};
 
     if (!window) {
@@ -68,6 +84,8 @@ int main() {
         glfwTerminate();
         return EXIT_FAILURE;
     }
+
+    glfwSetWindowUserPointer(window.get(), &state);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window.get());
@@ -219,8 +237,8 @@ int main() {
     unsigned int textureColorbuffer;
     glGenTextures(1, &textureColorbuffer);
     glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, square, square, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, state.screenWidth,
+                 state.screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -232,7 +250,8 @@ int main() {
     unsigned int rbo;
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, square, square);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                          state.screenWidth, state.screenHeight);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // attach it to currently bound framebuffer object
@@ -247,8 +266,8 @@ int main() {
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window.get())) {
         float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        state.deltaTime = currentFrame - state.lastFrame;
+        state.lastFrame = currentFrame;
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -273,10 +292,12 @@ int main() {
 
         default_shader.use();
         glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(
-            glm::radians(camera.Zoom),
-            (float)screen_width / (float)screen_height, 0.1f, 100.0f);
+        glm::mat4 view = state.camera.GetViewMatrix();
+        glm::mat4 projection =
+            glm::perspective(glm::radians(state.camera.Zoom),
+                             static_cast<float>(state.screenWidth) /
+                                 static_cast<float>(state.screenHeight),
+                             0.1f, 100.0f);
         default_shader.setMat4("view", view);
         default_shader.setMat4("projection", projection);
         // cubes
@@ -314,7 +335,7 @@ int main() {
         glBindTexture(GL_TEXTURE_2D,
                       textureColorbuffer);  // use the color attachment texture
                                             // as the texture of the quad plane
-        // glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // IMGUI
         ImGui::Begin("Test");
@@ -369,17 +390,22 @@ int main() {
 }
 
 void processInput(GLFWwindow* window) {
+    State* state = static_cast<State*>(glfwGetWindowUserPointer(window));
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+        state->camera.ProcessKeyboard(FORWARD, state->deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
+        state->camera.ProcessKeyboard(BACKWARD, state->deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
+        state->camera.ProcessKeyboard(LEFT, state->deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+        state->camera.ProcessKeyboard(RIGHT, state->deltaTime);
 }
 
-void framebuffer_size_callback(GLFWwindow*, int width, int height) {
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    State* state = static_cast<State*>(glfwGetWindowUserPointer(window));
+    state->screenWidth = width;
+    state->screenHeight = height;
     glViewport(0, 0, width, height);
 }
 
@@ -389,11 +415,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action,
     (void)scancode;
     (void)mods;
 
-    static bool isMouseDisabled = true;
-
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+
+    static bool isMouseDisabled = true;
 
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         if (isMouseDisabled) {
@@ -415,35 +441,41 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action,
     }
 }
 
-void mouse_callback(GLFWwindow*, double xpos, double ypos) {
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    State* state = static_cast<State*>(glfwGetWindowUserPointer(window));
+
     float x = static_cast<float>(xpos);
     float y = static_cast<float>(ypos);
 
-    if (firstMouse) {
-        lastX = x;
-        lastY = y;
-        firstMouse = false;
+    if (state->firstMouse) {
+        state->lastX = x;
+        state->lastY = y;
+        state->firstMouse = false;
     }
 
-    float xoffset = x - lastX;
-    float yoffset = lastY - y;
+    float xoffset = x - state->lastX;
+    float yoffset = state->lastY - y;
 
-    lastX = x;
-    lastY = y;
+    state->lastX = x;
+    state->lastY = y;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    state->camera.ProcessMouseMovement(xoffset, yoffset);
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    (void)window;
     (void)xoffset;
-    camera.ProcessMouseScroll(static_cast<float>(yoffset));
+    State* state = static_cast<State*>(glfwGetWindowUserPointer(window));
+    state->camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
-unsigned int loadTexture(char const* path) {
+unsigned int loadTexture(std::string path) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+    // unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+    std::unique_ptr<unsigned char, decltype(&stbi_image_free)> data(
+        stbi_load(path.c_str(), &width, &height, &nrComponents, 0),
+        stbi_image_free);
+
     if (data) {
         GLenum format;
         if (nrComponents == 1)
@@ -455,7 +487,7 @@ unsigned int loadTexture(char const* path) {
 
         glBindTexture(GL_TEXTURE_2D, textureID);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
-                     GL_UNSIGNED_BYTE, data);
+                     GL_UNSIGNED_BYTE, data.get());
         glGenerateMipmap(GL_TEXTURE_2D);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -463,11 +495,8 @@ unsigned int loadTexture(char const* path) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                         GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
     } else {
         std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
     }
 
     return textureID;
