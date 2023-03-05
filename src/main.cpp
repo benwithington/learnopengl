@@ -60,7 +60,7 @@ int main() {
     utility::Shader assimpShader{"shaders/default.vert", "shaders/assimp.frag"};
 
     // Models
-    // learning::Model backpack("res/models/backpack/backpack.obj");
+    utility::Model backpack("res/models/backpack/backpack.obj");
 
     float cubeVertices[] = {
         // positions          // texture Coords
@@ -104,6 +104,7 @@ int main() {
 
                             -1.0f, 1.0f, 0.0f, 1.0f,  1.0f,  -1.0f,
                             1.0f,  0.0f, 1.0f, 1.0f,  1.0f,  1.0f};
+
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
@@ -160,43 +161,6 @@ int main() {
     screenShader.use();
     screenShader.setInt("screenTexture", 0);
 
-    // Framebuffers
-    unsigned int fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    int square = 512;
-
-    // generate texture
-    unsigned int textureColorbuffer;
-    glGenTextures(1, &textureColorbuffer);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.state.screenWidth,
-                 window.state.screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // attach it to currently bound framebuffer object
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           textureColorbuffer, 0);
-
-    unsigned int rbo;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-                          window.state.screenWidth, window.state.screenHeight);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    // attach it to currently bound framebuffer object
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                              GL_RENDERBUFFER, rbo);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"
-                  << std::endl;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     /* Loop until the user closes the window */
     while (!window.shouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -208,17 +172,10 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // ImGui::ShowDemoWindow();
-
         window.processInput();
 
         // render
         // ------
-        // bind to framebuffer and draw scene as we normally would to color
-        // texture
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glEnable(GL_DEPTH_TEST);  // enable depth testing (is disabled for
-                                  // rendering screen-space quad)
 
         // make sure we clear the framebuffer's content
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -252,48 +209,8 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
-        // now bind back to default framebuffer and draw a quad plane with the
-        // attached framebuffer color texture
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);  // disable depth test so screen-space quad
-                                   // isn't discarded due to depth test.
-        // clear all relevant buffers
-        glClearColor(
-            1.0f, 1.0f, 1.0f,
-            1.0f);  // set clear color to white (not really necessary actually,
-                    // since we won't be able to see behind the quad anyways)
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        screenShader.use();
-        glBindVertexArray(quadVAO);
-        glBindTexture(GL_TEXTURE_2D,
-                      textureColorbuffer);  // use the color attachment texture
-                                            // as the texture of the quad plane
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
         // IMGUI
-        ImGui::Begin("Test");
-        {
-            GLint v[4];
-            glGetIntegerv(GL_VIEWPORT, v);
-
-            float tempSquare = static_cast<float>(square);
-
-            // ImGui::SetWindowSize(ImVec2(tempSquare, tempSquare));
-            // ImGui::SetWindowPos(ImVec2(100, 100));
-
-            glViewport(0, 0, square, square);
-
-            // Calculate the texture coordinates with flipped Y-axis
-            ImVec2 uv0 = ImVec2(0.0f, 1.0f);
-            ImVec2 uv1 = ImVec2(1.0f, 0.0f);
-
-            ImGui::Image((void*)(intptr_t)textureColorbuffer,
-                         ImVec2(tempSquare, tempSquare), uv0, uv1);
-
-            glViewport(0, 0, v[2], v[3]);
-        }
-        ImGui::End();
+        ImGui::ShowDemoWindow();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -316,8 +233,6 @@ int main() {
     glDeleteBuffers(1, &cubeVBO);
     glDeleteBuffers(1, &planeVBO);
     glDeleteBuffers(1, &quadVBO);
-    glDeleteFramebuffers(1, &fbo);
-    glDeleteRenderbuffers(1, &rbo);
 
     glfwTerminate();
     return EXIT_SUCCESS;
