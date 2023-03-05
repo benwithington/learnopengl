@@ -20,7 +20,7 @@ unsigned int loadTexture(std::string path) {
         stbi_image_free);
 
     if (data) {
-        GLenum format;
+        GLenum format{};
         if (nrComponents == 1)
             format = GL_RED;
         else if (nrComponents == 3)

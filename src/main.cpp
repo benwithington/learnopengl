@@ -55,6 +55,8 @@ int main() {
                                    "shaders/default.frag"};
     utility::Shader screenShader{"shaders/screen.vert", "shaders/screen.frag"};
     utility::Shader assimpShader{"shaders/default.vert", "shaders/assimp.frag"};
+    utility::Shader singleColour{"shaders/default.vert",
+                                 "shaders/singleColour.frag"};
 
     // Models
     // utility::Model backpack("res/models/backpack/backpack.obj");
@@ -184,7 +186,85 @@ int main() {
      *      GL_GEQUAL       -   Passes if the frag depth is greater than or
      *                          equal to the stored depth
      */
-    glDepthFunc(GL_LESS);
+    glDepthFunc(GL_LESS);  // default values
+
+    /*
+     *  Stencil testing
+     */
+    glEnable(GL_STENCIL_TEST);
+
+    /*
+     *  An equivalend to the glDepthMask(GL_FALSE), for the stencil buffer is:
+     *  glStencilMask(0x00), this ANDs the stencil values with the bitmask 0x00,
+     *  then all stencil values written to the buffer end up as 0s
+     *  The default behaviour is the same as setting the bitmask as "0xFF"
+     *  glStencilMask(0xFF)
+     */
+    glStencilMask(0x00);  // each bit ends up as 0, essentially disables writing
+                          // to the stencil buffer
+    glStencilMask(0xFF);  // each bit is written to the stencil buffer as is
+
+    /*
+     *  Stencil functions
+     *  There are two functions that can be used to configure opengl stencil
+     *  testing
+     *  glStencilFunc and glStencilOp
+     *
+     *  glStencilFunc(GLenum func, GLint ref, GLuint mask)
+     *  -   func
+     *      -   Sets the stencil test function that determines whether a
+     *          fragment passes or is discarded. This test function is applied
+     *          to the stored stencil value and the glStencilFunc's ref value.
+     *      -   Possible options are:
+     *          -   GL_NEVER
+     *          -   GL_LESS
+     *          -   GL_LEQUAL
+     *          -   GL_GREATER
+     *          -   GL_GEQUAL
+     *          -   GL_EQUAL
+     *          -   GL_NOTEQUAL
+     *          -   GL_ALWAYS
+     *  -   ref
+     *      -   specifies the reference value for the stencil test, the stencil
+     *          buffer's content is compared against this value.
+     *  -   mask
+     *      -   Specifies a mask that is ANDed with both the reference value and
+     *          the stored stencil value before the test compares them
+     *      -   Initially set to all 1s
+     *
+     *  glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass)
+     *  -   sfail
+     *      -   action to take if the stencil test fails
+     *  -   dpfail
+     *      -   action to take if the stencil test passes, but the depth test
+     *          fails.
+     *  -   dppass
+     *      -   action to take if both stencil and depth test pass.
+     *
+     *  Parameters for each of the above parameters are:
+     *  -   GL_KEEP
+     *      -   the currently stored stencil value is kept
+     *  -   GL_ZERO
+     *      -   the stencil value is set to 0
+     *  -   GL_REPLACE
+     *      -   the stencil value is replaced with the reference value set with
+     *          glStencilFunc
+     *  -   GL_INCR
+     *      -   Stencil value incremented if lower than maximum value
+     *  -   GL_INCR_WRAP
+     *      -   Same as GL_INCR, but wraps to 0 if maximum is exceeded
+     *  -   GL_DECR
+     *      -   Stencil value decremented if higher than minimum value
+     *  -   GL_DECR_WRAP
+     *      -   Same as GL_DECR, but wraps to the maximum value if lower than
+     *          minimum
+     *  -   GL_INVERT
+     *      -   bitwise inverts the current stencil buffer value
+     *
+     *  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);  // default values
+     */
+
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     /* Loop until the user closes the window */
     while (!window.shouldClose()) {
@@ -201,10 +281,12 @@ int main() {
 
         // render
         // ------
-
         // make sure we clear the framebuffer's content
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                GL_STENCIL_BUFFER_BIT);
+
+        glStencilMask(0x00);
 
         default_shader.use();
         default_shader.setBool("showDepth", window.state.showDepth);
@@ -217,6 +299,16 @@ int main() {
                              0.1f, 100.0f);
         default_shader.setMat4("view", view);
         default_shader.setMat4("projection", projection);
+
+        // floor
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, metalTexture);
+        default_shader.setMat4("model", glm::mat4(1.0f));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
         // cubes
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -228,12 +320,32 @@ int main() {
         model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
         default_shader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-        // floor
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, metalTexture);
-        default_shader.setMat4("model", glm::mat4(1.0f));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+
+        singleColour.use();
+        singleColour.setMat4("view", view);
+        singleColour.setMat4("projection", projection);
+        float scale = 1.1f;
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        singleColour.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        singleColour.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
         glBindVertexArray(0);
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glEnable(GL_DEPTH_TEST);
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
