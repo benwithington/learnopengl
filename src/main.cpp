@@ -50,9 +50,6 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window.get(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    // Global opengl state
-    glEnable(GL_DEPTH_TEST);
-
     // Shaders
     utility::Shader default_shader{"shaders/default.vert",
                                    "shaders/default.frag"};
@@ -60,7 +57,7 @@ int main() {
     utility::Shader assimpShader{"shaders/default.vert", "shaders/assimp.frag"};
 
     // Models
-    utility::Model backpack("res/models/backpack/backpack.obj");
+    // utility::Model backpack("res/models/backpack/backpack.obj");
 
     float cubeVertices[] = {
         // positions          // texture Coords
@@ -116,8 +113,8 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                           (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                           (void*)(3 * sizeof(float)));
     // plane VAO
     unsigned int planeVAO, planeVBO;
@@ -130,8 +127,8 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                           (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                           (void*)(3 * sizeof(float)));
     // screen quad VAO
     unsigned int quadVAO, quadVBO;
@@ -144,8 +141,8 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                           (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                           (void*)(2 * sizeof(float)));
 
     // Load Textures
@@ -157,9 +154,37 @@ int main() {
     // --------------------
     default_shader.use();
     default_shader.setInt("texture1", 0);
+    default_shader.setBool("showDepth", false);
 
     screenShader.use();
     screenShader.setInt("screenTexture", 0);
+
+    // Global opengl state
+    glEnable(GL_DEPTH_TEST);
+    /*
+     * Use to disable writing to the depth buffer, making it read only
+     * glDepthMask(GL_FALSE);
+     */
+
+    /*
+     * Tell opengl when it should pass or discard fragments by setting the
+     * comparison operator
+     * glDepthFunc(GL_LESS); // Default value
+     * Options:
+     *      GL_ALWAYS       -   Always passes
+     *      GL_NEVER        -   Never passes
+     *      GL_LESS         -   Passes if frag depth is less than stored depth
+     *      GL_EQUAL        -   Passes if frag depth is equal to stored depth
+     *      GL_LEQUAL       -   Passes if frag depth is less than or equal to
+     *                          stored depth
+     *      GL_GREATER      -   Passes if frag depth is greater than stored
+     *                          depth
+     *      GL_NOTEQUAL     -   Passes if frag depth is not euqal to stored
+     *                          depth
+     *      GL_GEQUAL       -   Passes if the frag depth is greater than or
+     *                          equal to the stored depth
+     */
+    glDepthFunc(GL_LESS);
 
     /* Loop until the user closes the window */
     while (!window.shouldClose()) {
@@ -182,6 +207,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         default_shader.use();
+        default_shader.setBool("showDepth", window.state.showDepth);
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = window.state.camera.GetViewMatrix();
         glm::mat4 projection =
@@ -208,6 +234,18 @@ int main() {
         default_shader.setMat4("model", glm::mat4(1.0f));
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
+
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
+
+        /*
+        assimpShader.use();
+        assimpShader.setMat4("model", model);
+        assimpShader.setMat4("view", view);
+        assimpShader.setMat4("projection", projection);
+        backpack.draw(assimpShader);
+        */
 
         // IMGUI
         ImGui::ShowDemoWindow();

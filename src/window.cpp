@@ -10,12 +10,13 @@ State::State(int width, int height, std::string title)
     : screenWidth(width),
       screenHeight(height),
       title(title),
-      camera(Camera{glm::vec3(0.0f, 0.0f, 3.0f)}),
+      camera(Camera{glm::vec3(0.0f, 2.5f, 10.0f)}),
       lastX(screenWidth / 2.0f),
       lastY(screenHeight / 2.0f),
       firstMouse(true),
       deltaTime(0.0f),
-      lastFrame(0.0f) {}
+      lastFrame(0.0f),
+      showDepth(false) {}
 
 Window::Window(int width, int height, std::string title, GLFWmonitor* monitor,
                GLFWwindow* share) {
@@ -86,6 +87,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action,
     (void)scancode;
     (void)mods;
 
+    State* state = static_cast<State*>(glfwGetWindowUserPointer(window));
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
@@ -109,6 +112,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action,
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+        state->showDepth = !state->showDepth;
     }
 }
 

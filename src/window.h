@@ -25,6 +25,8 @@ struct State {
     float deltaTime;
     float lastFrame;
 
+    bool showDepth;
+
     State(int width, int height, std::string title);
 };
 
