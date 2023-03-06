@@ -59,93 +59,56 @@ int main() {
                                  "shaders/singleColour.frag"};
 
     // Models
-    // utility::Model backpack("res/models/backpack/backpack.obj");
+    // utility::AssimpModel backpack("res/models/backpack/backpack.obj");
 
-    float cubeVertices[] = {
-        // positions          // texture Coords
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+    std::vector<float> cubeVertices{
+        // positions
+        -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f,
+        0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
 
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
+        0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,
 
-        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,
 
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
-        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f,
+        0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
 
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,
+        0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f,
 
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
+        -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,
+        0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f};
 
-    float planeVertices[] = {
-        // positions          // texture Coords
-        5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, 5.0f,
-        0.0f, 0.0f,  -5.0f, -0.5f, -5.0f, 0.0f,  2.0f,
+    std::vector<float> cubeTexCoords{0.0f, 0.0f, 1.0f, 0.0f, 01.0f, 1.0f,
+                                     1.0f, 1.0f, 0.0f, 1.0f, 0.0f,  0.0f,
 
-        5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, -5.0f,
-        0.0f, 2.0f,  5.0f,  -0.5f, -5.0f, 2.0f,  2.0f};
+                                     0.0f, 0.0f, 1.0f, 0.0f, 1.0f,  1.0f,
+                                     1.0f, 1.0f, 0.0f, 1.0f, 0.0f,  0.0f,
 
-    float quadVertices[] = {// vertex attributes for a quad that fills the
-                            // entire screen in Normalized Device Coordinates.
-                            // positions   // texCoords
-                            -1.0f, 1.0f, 0.0f, 1.0f,  -1.0f, -1.0f,
-                            0.0f,  0.0f, 1.0f, -1.0f, 1.0f,  0.0f,
+                                     1.0f, 0.0f, 1.0f, 1.0f, 0.0f,  1.0f,
+                                     0.0f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f,
 
-                            -1.0f, 1.0f, 0.0f, 1.0f,  1.0f,  -1.0f,
-                            1.0f,  0.0f, 1.0f, 1.0f,  1.0f,  1.0f};
+                                     1.0f, 0.0f, 1.0f, 1.0f, 0.0f,  1.0f,
+                                     0.0f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f,
 
-    // cube VAO
-    unsigned int cubeVAO, cubeVBO;
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &cubeVBO);
-    glBindVertexArray(cubeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices,
-                 GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)0);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)(3 * sizeof(float)));
-    // plane VAO
-    unsigned int planeVAO, planeVBO;
-    glGenVertexArrays(1, &planeVAO);
-    glGenBuffers(1, &planeVBO);
-    glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices,
-                 GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)0);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)(3 * sizeof(float)));
-    // screen quad VAO
-    unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
-                 GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          (void*)0);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          (void*)(2 * sizeof(float)));
+                                     0.0f, 1.0f, 1.0f, 1.0f, 1.0f,  0.0f,
+                                     1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  1.0f,
+
+                                     0.0f, 1.0f, 1.0f, 1.0f, 1.0f,  0.0f,
+                                     1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  1.0f};
+
+    std::vector<float> planeVertices{// positions
+                                     5.0f,  -0.5f, 5.0f,  -5.0f, -0.5f, 5.0f,
+                                     -5.0f, -0.5f, -5.0f, 5.0f,  -0.5f, 5.0f,
+                                     -5.0f, -0.5f, -5.0f, 5.0f,  -0.5f, -5.0f};
+
+    std::vector<float> planeTexCoords{2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 2.0f,
+                                      2.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f};
+
+    utility::RawModel cubeModel{cubeVertices, cubeTexCoords};
+    utility::RawModel planeModel{planeVertices, planeTexCoords};
 
     // Load Textures
     unsigned int cubeTexture =
@@ -301,25 +264,26 @@ int main() {
         default_shader.setMat4("projection", projection);
 
         // floor
-        glBindVertexArray(planeVAO);
+
         glBindTexture(GL_TEXTURE_2D, metalTexture);
         default_shader.setMat4("model", glm::mat4(1.0f));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        planeModel.draw(default_shader);
 
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
         // cubes
-        glBindVertexArray(cubeVAO);
+        // glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
         default_shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        cubeModel.draw(default_shader);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
         default_shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        cubeModel.draw(default_shader);
 
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
@@ -334,13 +298,13 @@ int main() {
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
         model = glm::scale(model, glm::vec3(scale, scale, scale));
         singleColour.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        cubeModel.draw(singleColour);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(scale, scale, scale));
         singleColour.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        cubeModel.draw(singleColour);
 
         glBindVertexArray(0);
         glStencilMask(0xFF);
@@ -375,14 +339,6 @@ int main() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
-
-    // Delete
-    glDeleteVertexArrays(1, &cubeVAO);
-    glDeleteVertexArrays(1, &planeVAO);
-    glDeleteVertexArrays(1, &quadVAO);
-    glDeleteBuffers(1, &cubeVBO);
-    glDeleteBuffers(1, &planeVBO);
-    glDeleteBuffers(1, &quadVBO);
 
     glfwTerminate();
     return EXIT_SUCCESS;

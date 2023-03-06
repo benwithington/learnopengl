@@ -20,14 +20,31 @@ unsigned int textureFromFile(const char* path, const std::string& directory,
                              bool gamma = false);
 
 class Model {
+    public:
+        virtual void draw(const Shader& shader) const = 0;
+};
+
+class RawModel : public Model {
+    public:
+        RawModel(std::vector<float>& vertices, std::vector<float> texCoords);
+        ~RawModel();
+        void draw(const Shader& shader) const override;
+    private:
+        unsigned int vao;
+        unsigned int verticesBuffer;
+        unsigned int texCoordBuffer;
+        std::size_t numTriangles;
+};
+
+class AssimpModel : public Model {
    public:
     std::vector<Texture> textures_loaded;
     std::vector<Mesh> meshes;
     std::string directory;
     bool gammaCorrection;
 
-    Model(const std::string& path, bool gamma = false);
-    void draw(Shader& shader);
+    AssimpModel(const std::string& path, bool gamma = false);
+    void draw(const Shader& shader) const override;
 
    private:
     void loadModel(const std::string& path);

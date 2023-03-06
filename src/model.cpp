@@ -4,18 +4,63 @@
 
 namespace personal::renderer::utility {
 
-Model::Model(const std::string& path, bool gamma) : gammaCorrection(gamma) {
+RawModel::RawModel(std::vector<float>& vertices, std::vector<float> texCoords)
+    : numTriangles(vertices.size()) {
+    // Generate Vertex Array Object
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // Generate the Vertex Buffer Object for the vertices
+    glGenBuffers(1, &verticesBuffer);
+    GLuint verticesIndex = 0;
+    glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0],
+                 GL_STATIC_DRAW);
+    glVertexAttribPointer(verticesIndex, 3, GL_FLOAT, GL_FALSE,
+                          3 * sizeof(float), (void*)0);
+
+    // Generate the Vertex Buffer Object for the tex coords
+    glGenBuffers(1, &texCoordBuffer);
+    GLuint texCoordsIndex = 1;
+    glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
+    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float),
+                 &texCoords[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(texCoordsIndex, 2, GL_FLOAT, GL_FALSE,
+                          2 * sizeof(float), (void*)0);
+
+    // Enable attrib arrays
+    glEnableVertexAttribArray(verticesIndex);
+    glEnableVertexAttribArray(texCoordsIndex);
+
+    // Unbind the VAO, resetting to default state
+    glBindVertexArray(0);
+}
+
+RawModel::~RawModel() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &verticesBuffer);
+    glDeleteBuffers(1, &texCoordBuffer);
+}
+
+void RawModel::draw(const Shader&) const {
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<int>(numTriangles));
+    glBindVertexArray(0);
+}
+
+AssimpModel::AssimpModel(const std::string& path, bool gamma)
+    : gammaCorrection(gamma) {
     loadModel(path);
 }
 
 // draws the model, and thus all its meshes
-void Model::draw(Shader& shader) {
+void AssimpModel::draw(const Shader& shader) const {
     for (unsigned int i = 0; i < meshes.size(); i++) meshes[i].draw(shader);
 }
 
 // loads a model with supported ASSIMP extensions from file and stores the
 // resulting meshes in the meshes vector.
-void Model::loadModel(const std::string& path) {
+void AssimpModel::loadModel(const std::string& path) {
     // read file via ASSIMP
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(
@@ -37,7 +82,7 @@ void Model::loadModel(const std::string& path) {
 
 // processes a node in a recursive fashion. Processes each individual mesh
 // located at the node and repeats this process on its children nodes (if any).
-void Model::processNode(aiNode* node, const aiScene* scene) {
+void AssimpModel::processNode(aiNode* node, const aiScene* scene) {
     // process each mesh located at the current node
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         // the node object only contains indices to index the actual objects in
@@ -53,7 +98,7 @@ void Model::processNode(aiNode* node, const aiScene* scene) {
     }
 }
 
-Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
+Mesh AssimpModel::processMesh(aiMesh* mesh, const aiScene* scene) {
     // data to fill
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
@@ -145,17 +190,17 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 
 // checks all material textures of a given type and loads the textures if
 // they're not loaded yet. the required info is returned as a Texture struct.
-std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat,
-                                                 aiTextureType type,
-                                                 std::string typeName) {
+std::vector<Texture> AssimpModel::loadMaterialTextures(aiMaterial* mat,
+                                                       aiTextureType type,
+                                                       std::string typeName) {
     std::vector<Texture> textures;
-    for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+    for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
         aiString str;
         mat->GetTexture(type, i, &str);
         // check if texture was loaded before and if so, continue to next
         // iteration: skip loading a new texture
         bool skip = false;
-        for (unsigned int j = 0; j < textures_loaded.size(); j++) {
+        for (unsigned int j = 0; j < textures_loaded.size(); ++j) {
             if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0) {
                 textures.push_back(textures_loaded[j]);
                 skip =
