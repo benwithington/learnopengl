@@ -51,12 +51,14 @@ int main() {
     ImGui_ImplOpenGL3_Init("#version 330");
 
     // Shaders
-    utility::Shader default_shader{"shaders/default.vert",
-                                   "shaders/default.frag"};
+    utility::Shader defaultShader{"shaders/default.vert",
+                                  "shaders/default.frag"};
     utility::Shader screenShader{"shaders/screen.vert", "shaders/screen.frag"};
     utility::Shader assimpShader{"shaders/default.vert", "shaders/assimp.frag"};
     utility::Shader singleColour{"shaders/default.vert",
                                  "shaders/singleColour.frag"};
+    utility::Shader blendingShader{"shaders/default.vert",
+                                   "shaders/blending.frag"};
 
     // Models
     // utility::AssimpModel backpack("res/models/backpack/backpack.obj");
@@ -107,19 +109,39 @@ int main() {
     std::vector<float> planeTexCoords{2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 2.0f,
                                       2.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f};
 
+    std::vector<float> transparentVeritces{
+        0.0f, 0.5f, 0.0f, 0.0f, -0.5f, 0.0f, 1.0f, -0.5f, 0.0f,
+        0.0f, 0.5f, 0.0f, 1.0f, -0.5f, 0.0f, 1.0f, 0.5f,  0.0f};
+
+    std::vector<float> transparentTexCoords{0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+                                            0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f};
+
     utility::RawModel cubeModel{cubeVertices, cubeTexCoords};
     utility::RawModel planeModel{planeVertices, planeTexCoords};
+    utility::RawModel grassModel{transparentVeritces, transparentTexCoords};
+
+    std::vector<glm::vec3> vegetation;
+    vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+    vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+    vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+    vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+    vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
     // Load Textures
     unsigned int cubeTexture =
         utility::loadTexture("res/textures/container.jpg");
     unsigned int metalTexture = utility::loadTexture("res/textures/metal.png");
+    unsigned int grassTexture = utility::loadTexture("res/textures/grass.png");
+    unsigned int windowTexture =
+        utility::loadTexture("res/textures/blending_transparent_window.png");
+
+    (void)windowTexture;
 
     // shader configuration
     // --------------------
-    default_shader.use();
-    default_shader.setInt("texture1", 0);
-    default_shader.setBool("showDepth", false);
+    defaultShader.use();
+    defaultShader.setInt("texture1", 0);
+    defaultShader.setBool("showDepth", false);
 
     screenShader.use();
     screenShader.setInt("screenTexture", 0);
@@ -251,8 +273,6 @@ int main() {
 
         glStencilMask(0x00);
 
-        default_shader.use();
-        default_shader.setBool("showDepth", window.state.showDepth);
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = window.state.camera.GetViewMatrix();
         glm::mat4 projection =
@@ -260,14 +280,16 @@ int main() {
                              static_cast<float>(window.state.screenWidth) /
                                  static_cast<float>(window.state.screenHeight),
                              0.1f, 100.0f);
-        default_shader.setMat4("view", view);
-        default_shader.setMat4("projection", projection);
+
+        defaultShader.use();
+        defaultShader.setBool("showDepth", window.state.showDepth);
+        defaultShader.setMat4("view", view);
+        defaultShader.setMat4("projection", projection);
 
         // floor
-
         glBindTexture(GL_TEXTURE_2D, metalTexture);
-        default_shader.setMat4("model", glm::mat4(1.0f));
-        planeModel.draw(default_shader);
+        defaultShader.setMat4("model", glm::mat4(1.0f));
+        planeModel.draw(defaultShader);
 
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
@@ -275,15 +297,16 @@ int main() {
         // glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        default_shader.setMat4("model", model);
-        cubeModel.draw(default_shader);
+        defaultShader.setMat4("model", model);
+        cubeModel.draw(defaultShader);
         // glDrawArrays(GL_TRIANGLES, 0, 36);
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        default_shader.setMat4("model", model);
+        defaultShader.setMat4("model", model);
         // glDrawArrays(GL_TRIANGLES, 0, 36);
-        cubeModel.draw(default_shader);
+        cubeModel.draw(defaultShader);
 
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
@@ -311,11 +334,24 @@ int main() {
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glEnable(GL_DEPTH_TEST);
 
+        blendingShader.use();
+        blendingShader.setMat4("view", view);
+        blendingShader.setMat4("projection", projection);
+        glBindTexture(GL_TEXTURE_2D, grassTexture);
+        for (std::size_t i = 0; i < vegetation.size(); ++i) {
+            model = glm::mat4(1.0f);
+            model = glm::rotate(model, glm::radians(180.0f),
+                                glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::translate(model, vegetation[i]);
+            blendingShader.setMat4("model", model);
+            grassModel.draw(blendingShader);
+        }
+
+        /*
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
         model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
 
-        /*
         assimpShader.use();
         assimpShader.setMat4("model", model);
         assimpShader.setMat4("view", view);
