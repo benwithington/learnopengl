@@ -5,6 +5,8 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <map>
+#include <algorithm>
 
 //External Libraries
 #include <glad/glad.h>
@@ -118,24 +120,24 @@ int main() {
 
     utility::RawModel cubeModel{cubeVertices, cubeTexCoords};
     utility::RawModel planeModel{planeVertices, planeTexCoords};
-    utility::RawModel grassModel{transparentVeritces, transparentTexCoords};
+    utility::RawModel squareModel{transparentVeritces, transparentTexCoords};
 
-    std::vector<glm::vec3> vegetation;
-    vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-    vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-    vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-    vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-    vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+    std::vector<glm::vec3> transparentPositions;
+    transparentPositions.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+    transparentPositions.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+    transparentPositions.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+    transparentPositions.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+    transparentPositions.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
     // Load Textures
-    unsigned int cubeTexture =
+    [[maybe_unused]] unsigned int cubeTexture =
         utility::loadTexture("res/textures/container.jpg");
-    unsigned int metalTexture = utility::loadTexture("res/textures/metal.png");
-    unsigned int grassTexture = utility::loadTexture("res/textures/grass.png");
-    unsigned int windowTexture =
+    [[maybe_unused]] unsigned int metalTexture =
+        utility::loadTexture("res/textures/metal.png");
+    [[maybe_unused]] unsigned int grassTexture =
+        utility::loadTexture("res/textures/grass.png");
+    [[maybe_unused]] unsigned int windowTexture =
         utility::loadTexture("res/textures/blending_transparent_window.png");
-
-    (void)windowTexture;
 
     // shader configuration
     // --------------------
@@ -251,6 +253,23 @@ int main() {
 
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
+    /*
+     * Blending provides greater flexibility than just discarding unwanted
+     * fragments, for blending it needs to be enabled in opengl
+     */
+    glEnable(GL_BLEND);
+
+    /*
+     * To tell opengl how to blend the glBlendFunc function is used.
+     * glBlendFunc(GLenum sfactor, GLenum dfactor)
+     *  -   sfactor
+     *      - The contribution of the source to the final colour
+     *  -   dfactor
+     *      - The contribution of the desitination to the final colour
+     */
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     /* Loop until the user closes the window */
     while (!window.shouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -334,20 +353,50 @@ int main() {
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glEnable(GL_DEPTH_TEST);
 
+        defaultShader.use();
+        defaultShader.setMat4("view", view);
+        defaultShader.setMat4("projection", projection);
+        glBindTexture(GL_TEXTURE_2D, windowTexture);
+
+        /*
+        std::map<float, glm::vec3> sorted;
+        for (std::size_t i = 0; i < transparentPositions.size(); ++i) {
+            float distance = glm::length(window.state.camera.Position -
+                                         transparentPositions[i]);
+            sorted[distance] = transparentPositions[i];
+        }
+        */
+
+        glm::vec3 camPosition = window.state.camera.Position;
+        std::sort(transparentPositions.begin(), transparentPositions.end(),
+                  [&camPosition](const glm::vec3& pos1, const glm::vec3& pos2) {
+                      return glm::length(camPosition - pos1) <=
+                             glm::length(camPosition - pos2);
+                  });
+
+        for (auto& position : transparentPositions) {
+            model = glm::mat4(1.0f);
+            model = glm::rotate(model, glm::radians(180.0f),
+                                glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::translate(model, position);
+            defaultShader.setMat4("model", model);
+            squareModel.draw(defaultShader);
+        }
+
+        /*
         blendingShader.use();
         blendingShader.setMat4("view", view);
         blendingShader.setMat4("projection", projection);
         glBindTexture(GL_TEXTURE_2D, grassTexture);
-        for (std::size_t i = 0; i < vegetation.size(); ++i) {
+        for (std::size_t i = 0; i < transparentPositions.size(); ++i) {
             model = glm::mat4(1.0f);
             model = glm::rotate(model, glm::radians(180.0f),
                                 glm::vec3(1.0f, 0.0f, 0.0f));
-            model = glm::translate(model, vegetation[i]);
+            model = glm::translate(model, transparentPositions[i]);
             blendingShader.setMat4("model", model);
             grassModel.draw(blendingShader);
         }
 
-        /*
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
         model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
