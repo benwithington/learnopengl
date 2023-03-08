@@ -182,6 +182,125 @@ int main() {
     screenShader.use();
     screenShader.setInt("screenTexture", 0);
 
+    /*
+     * Framebuffers
+     * Framebuffers have standard opengl object creation
+     */
+
+    unsigned int fbo;
+    glGenFramebuffers(1, &fbo);  // 1. Generate Frambuffer
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);  // 2. Bind Framebuffer
+
+    /*
+     * By binding the framebuffer, all of the following read and write
+     * framebuffer operations will only affect the currently bound framebuffer.
+     * It is also possible to find a framebuffer to a read or write target
+     * specifically
+     * by binding to GL_READ_FRAMEBUFFER or GL_DRAW_FRAMEBUFFER
+     * The framebuffer bound to GL_READ_FRAMEBUFFER will be used for all read
+     * operations
+     * The framebuffer bound to GL_DRAW_FRAMEBUFFER will be user for
+     * all write operations
+     */
+
+    /*
+        The framebuffer is not yet usable as it is not "complete".
+        For a framebuffer to be complete it must:
+            -   Have at least one buffer (colour, depth, stencil) attached
+            -   At least colour attachment
+            -   All attachments should be complete
+            -   Each buffer should have the same number of samples
+
+        To check if a framebuffer is complete, use glCheckFramebufferStatus()
+    */
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Incomplete Framebuffer\n";
+    }
+
+    /*
+        Remember to unbind and delete framebuffers after use
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDeleteFramebuffers(1, &fbo);
+    */
+
+    /*
+        An attachment is a memory location that can act as a buffer for the
+       framebuffer
+       When creating an attachment there are two options, textures or
+       renderbuffer objects
+    */
+
+    // Texture attachments
+
+    unsigned int textureAttachment;
+    glGenTextures(1, &textureAttachment);
+    glBindTexture(GL_TEXTURE_2D, textureAttachment);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.state.screenWidth,
+                 window.state.screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE,
+                 nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    /*
+        The main difference between a texture attachment and a regular texture
+        is that we set the texture's data to a nullptr, with this texture we're
+        only allocating memory and not actually filling it
+
+        Filling the texture will happen as soon as we render to the framebuffer.
+
+        Now that the texture has been created, it just needs to be attached to
+       the active framebuffer
+    */
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           textureAttachment, 0);
+
+    /*
+        Next to the color attachment, it is also possible to attach depth and
+        stencil attachments
+    */
+
+    unsigned int depth_stencil_textureAttachment;
+    glGenTextures(1, &depth_stencil_textureAttachment);
+    glBindTexture(GL_TEXTURE_2D, depth_stencil_textureAttachment);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8,
+                 window.state.screenWidth, window.state.screenHeight, 0,
+                 GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                           GL_TEXTURE_2D, depth_stencil_textureAttachment, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Complete Framebuffer\n";
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    /*
+        Renderbuffer object attachments
+    */
+
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                          window.state.screenWidth, window.state.screenHeight);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                              GL_RENDERBUFFER, rbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Complete Framebuffer\n";
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
     // Global opengl state
     glEnable(GL_DEPTH_TEST);
     /*
@@ -326,7 +445,7 @@ int main() {
      * GL_FRONT_AND_BACK
      */
 
-    glCullFace(GL_FRONT);
+    glCullFace(GL_BACK);
 
     /* Loop until the user closes the window */
     while (!window.shouldClose()) {
