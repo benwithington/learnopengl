@@ -7,6 +7,9 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <future>
+#include <thread>
+#include <chrono>
 
 //External Libraries
 #include <glad/glad.h>
@@ -65,58 +68,89 @@ int main() {
     // Models
     // utility::AssimpModel backpack("res/models/backpack/backpack.obj");
 
+    /*
+    std::future<std::unique_ptr<utility::AssimpModel>> backpackFuture =
+        std::async(std::launch::async, []() {
+            return std::make_unique<utility::AssimpModel>(
+                "res/models/backpack/backpack.obj");
+        });
+    */
+
     std::vector<float> cubeVertices{
+        // Back face
+        -0.5f, -0.5f, -0.5f,  // Bottom-left
+        0.5f, 0.5f, -0.5f,    // top-right
+        0.5f, -0.5f, -0.5f,   // bottom-right
+        0.5f, 0.5f, -0.5f,    // top-right
+        -0.5f, -0.5f, -0.5f,  // bottom-left
+        -0.5f, 0.5f, -0.5f,   // top-left
+        // Front face
+        -0.5f, -0.5f, 0.5f,  // bottom-left
+        0.5f, -0.5f, 0.5f,   // bottom-right
+        0.5f, 0.5f, 0.5f,    // top-right
+        0.5f, 0.5f, 0.5f,    // top-right
+        -0.5f, 0.5f, 0.5f,   // top-left
+        -0.5f, -0.5f, 0.5f,  // bottom-left
+        // Left face
+        -0.5f, 0.5f, 0.5f,    // top-right
+        -0.5f, 0.5f, -0.5f,   // top-left
+        -0.5f, -0.5f, -0.5f,  // bottom-left
+        -0.5f, -0.5f, -0.5f,  // bottom-left
+        -0.5f, -0.5f, 0.5f,   // bottom-right
+        -0.5f, 0.5f, 0.5f,    // top-right
+                              // Right face
+        0.5f, 0.5f, 0.5f,     // top-left
+        0.5f, -0.5f, -0.5f,   // bottom-right
+        0.5f, 0.5f, -0.5f,    // top-right
+        0.5f, -0.5f, -0.5f,   // bottom-right
+        0.5f, 0.5f, 0.5f,     // top-left
+        0.5f, -0.5f, 0.5f,    // bottom-left
+        // Bottom face
+        -0.5f, -0.5f, -0.5f,  // top-right
+        0.5f, -0.5f, -0.5f,   // top-left
+        0.5f, -0.5f, 0.5f,    // bottom-left
+        0.5f, -0.5f, 0.5f,    // bottom-left
+        -0.5f, -0.5f, 0.5f,   // bottom-right
+        -0.5f, -0.5f, -0.5f,  // top-right
+        // Top face
+        -0.5f, 0.5f, -0.5f,  // top-left
+        0.5f, 0.5f, 0.5f,    // bottom-right
+        0.5f, 0.5f, -0.5f,   // top-right
+        0.5f, 0.5f, 0.5f,    // bottom-right
+        -0.5f, 0.5f, -0.5f,  // top-left
+        -0.5f, 0.5f, 0.5f    // bottom-left
+    };
+    std::vector<float> cubeTexCoords{
+        0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+
+        0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+
+        1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+
+        1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+
+        0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+
+        0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+
+    std::vector<float> planeVertices{
         // positions
-        -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f,
-        0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
+        5.0f, -0.5f, 5.0f, -5.0f, -0.5f, -5.0f, -5.0f, -0.5f, 5.0f,
 
-        -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
-        0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,
+        5.0f, -0.5f, 5.0f, 5.0f,  -0.5f, -5.0f, -5.0f, -0.5f, -5.0f};
 
-        -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,
+    std::vector<float> planeTexCoords{2.0f, 0.0f, 0.0f, 2.0f, 0.0f, 0.0f,
 
-        0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f,
-        0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
-
-        -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,
-        0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f,
-
-        -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,
-        0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f};
-
-    std::vector<float> cubeTexCoords{0.0f, 0.0f, 1.0f, 0.0f, 01.0f, 1.0f,
-                                     1.0f, 1.0f, 0.0f, 1.0f, 0.0f,  0.0f,
-
-                                     0.0f, 0.0f, 1.0f, 0.0f, 1.0f,  1.0f,
-                                     1.0f, 1.0f, 0.0f, 1.0f, 0.0f,  0.0f,
-
-                                     1.0f, 0.0f, 1.0f, 1.0f, 0.0f,  1.0f,
-                                     0.0f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f,
-
-                                     1.0f, 0.0f, 1.0f, 1.0f, 0.0f,  1.0f,
-                                     0.0f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f,
-
-                                     0.0f, 1.0f, 1.0f, 1.0f, 1.0f,  0.0f,
-                                     1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  1.0f,
-
-                                     0.0f, 1.0f, 1.0f, 1.0f, 1.0f,  0.0f,
-                                     1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  1.0f};
-
-    std::vector<float> planeVertices{// positions
-                                     5.0f,  -0.5f, 5.0f,  -5.0f, -0.5f, 5.0f,
-                                     -5.0f, -0.5f, -5.0f, 5.0f,  -0.5f, 5.0f,
-                                     -5.0f, -0.5f, -5.0f, 5.0f,  -0.5f, -5.0f};
-
-    std::vector<float> planeTexCoords{2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 2.0f,
-                                      2.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f};
+                                      2.0f, 0.0f, 2.0f, 2.0f, 0.0f, 2.0f};
 
     std::vector<float> transparentVeritces{
-        0.0f, 0.5f, 0.0f, 0.0f, -0.5f, 0.0f, 1.0f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f, 1.0f, -0.5f, 0.0f, 1.0f, 0.5f,  0.0f};
+        0.0f, 0.5f, 0.0f, 1.0f, -0.5f, 0.0f, 0.0f, -0.5f, 0.0f,
 
-    std::vector<float> transparentTexCoords{0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-                                            0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f};
+        0.0f, 0.5f, 0.0f, 1.0f, 0.5f,  0.0f, 1.0f, -0.5f, 0.0f};
+
+    std::vector<float> transparentTexCoords{0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+
+                                            0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f};
 
     utility::RawModel cubeModel{cubeVertices, cubeTexCoords};
     utility::RawModel planeModel{planeVertices, planeTexCoords};
@@ -162,16 +196,13 @@ int main() {
      * Options:
      *      GL_ALWAYS       -   Always passes
      *      GL_NEVER        -   Never passes
-     *      GL_LESS         -   Passes if frag depth is less than stored depth
-     *      GL_EQUAL        -   Passes if frag depth is equal to stored depth
-     *      GL_LEQUAL       -   Passes if frag depth is less than or equal to
-     *                          stored depth
-     *      GL_GREATER      -   Passes if frag depth is greater than stored
-     *                          depth
-     *      GL_NOTEQUAL     -   Passes if frag depth is not euqal to stored
-     *                          depth
-     *      GL_GEQUAL       -   Passes if the frag depth is greater than or
-     *                          equal to the stored depth
+     *      GL_LESS         -   Passes if frag depth is less than stored
+     * depth GL_EQUAL        -   Passes if frag depth is equal to stored
+     * depth GL_LEQUAL       -   Passes if frag depth is less than or equal
+     * to stored depth GL_GREATER      -   Passes if frag depth is greater
+     * than stored depth GL_NOTEQUAL     -   Passes if frag depth is not
+     * euqal to stored depth GL_GEQUAL       -   Passes if the frag depth is
+     * greater than or equal to the stored depth
      */
     glDepthFunc(GL_LESS);  // default values
 
@@ -181,14 +212,14 @@ int main() {
     glEnable(GL_STENCIL_TEST);
 
     /*
-     *  An equivalend to the glDepthMask(GL_FALSE), for the stencil buffer is:
-     *  glStencilMask(0x00), this ANDs the stencil values with the bitmask 0x00,
-     *  then all stencil values written to the buffer end up as 0s
-     *  The default behaviour is the same as setting the bitmask as "0xFF"
+     *  An equivalend to the glDepthMask(GL_FALSE), for the stencil buffer
+     * is: glStencilMask(0x00), this ANDs the stencil values with the
+     * bitmask 0x00, then all stencil values written to the buffer end up as
+     * 0s The default behaviour is the same as setting the bitmask as "0xFF"
      *  glStencilMask(0xFF)
      */
-    glStencilMask(0x00);  // each bit ends up as 0, essentially disables writing
-                          // to the stencil buffer
+    glStencilMask(0x00);  // each bit ends up as 0, essentially disables
+                          // writing to the stencil buffer
     glStencilMask(0xFF);  // each bit is written to the stencil buffer as is
 
     /*
@@ -200,8 +231,9 @@ int main() {
      *  glStencilFunc(GLenum func, GLint ref, GLuint mask)
      *  -   func
      *      -   Sets the stencil test function that determines whether a
-     *          fragment passes or is discarded. This test function is applied
-     *          to the stored stencil value and the glStencilFunc's ref value.
+     *          fragment passes or is discarded. This test function is
+     * applied to the stored stencil value and the glStencilFunc's ref
+     * value.
      *      -   Possible options are:
      *          -   GL_NEVER
      *          -   GL_LESS
@@ -212,19 +244,19 @@ int main() {
      *          -   GL_NOTEQUAL
      *          -   GL_ALWAYS
      *  -   ref
-     *      -   specifies the reference value for the stencil test, the stencil
-     *          buffer's content is compared against this value.
+     *      -   specifies the reference value for the stencil test, the
+     * stencil buffer's content is compared against this value.
      *  -   mask
-     *      -   Specifies a mask that is ANDed with both the reference value and
-     *          the stored stencil value before the test compares them
+     *      -   Specifies a mask that is ANDed with both the reference value
+     * and the stored stencil value before the test compares them
      *      -   Initially set to all 1s
      *
      *  glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass)
      *  -   sfail
      *      -   action to take if the stencil test fails
      *  -   dpfail
-     *      -   action to take if the stencil test passes, but the depth test
-     *          fails.
+     *      -   action to take if the stencil test passes, but the depth
+     * test fails.
      *  -   dppass
      *      -   action to take if both stencil and depth test pass.
      *
@@ -234,8 +266,8 @@ int main() {
      *  -   GL_ZERO
      *      -   the stencil value is set to 0
      *  -   GL_REPLACE
-     *      -   the stencil value is replaced with the reference value set with
-     *          glStencilFunc
+     *      -   the stencil value is replaced with the reference value set
+     * with glStencilFunc
      *  -   GL_INCR
      *      -   Stencil value incremented if lower than maximum value
      *  -   GL_INCR_WRAP
@@ -243,8 +275,8 @@ int main() {
      *  -   GL_DECR
      *      -   Stencil value decremented if higher than minimum value
      *  -   GL_DECR_WRAP
-     *      -   Same as GL_DECR, but wraps to the maximum value if lower than
-     *          minimum
+     *      -   Same as GL_DECR, but wraps to the maximum value if lower
+     * than minimum
      *  -   GL_INVERT
      *      -   bitwise inverts the current stencil buffer value
      *
@@ -269,6 +301,32 @@ int main() {
      */
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    /*
+     * Face culling
+     * to enable, simply use glEnable(GL_CULL_FACE)
+     */
+
+    glEnable(GL_CULL_FACE);
+
+    /*
+     * Set the winding direction using glFrontFace
+     * With either GL_CCW for counter-clockwise
+     * or GL_CW for clockwise
+     *
+     */
+
+    glFrontFace(GL_CCW);
+
+    /*
+     * Also, tell opengl which face to cull using glCullFace
+     * With options as:
+     * GL_BACK
+     * GL_FRONT
+     * GL_FRONT_AND_BACK
+     */
+
+    glCullFace(GL_FRONT);
 
     /* Loop until the user closes the window */
     while (!window.shouldClose()) {
@@ -299,6 +357,8 @@ int main() {
                              static_cast<float>(window.state.screenWidth) /
                                  static_cast<float>(window.state.screenHeight),
                              0.1f, 100.0f);
+
+        glEnable(GL_CULL_FACE);
 
         defaultShader.use();
         defaultShader.setBool("showDepth", window.state.showDepth);
@@ -358,21 +418,14 @@ int main() {
         defaultShader.setMat4("projection", projection);
         glBindTexture(GL_TEXTURE_2D, windowTexture);
 
-        /*
-        std::map<float, glm::vec3> sorted;
-        for (std::size_t i = 0; i < transparentPositions.size(); ++i) {
-            float distance = glm::length(window.state.camera.Position -
-                                         transparentPositions[i]);
-            sorted[distance] = transparentPositions[i];
-        }
-        */
-
         glm::vec3 camPosition = window.state.camera.Position;
         std::sort(transparentPositions.begin(), transparentPositions.end(),
                   [&camPosition](const glm::vec3& pos1, const glm::vec3& pos2) {
                       return glm::length(camPosition - pos1) <=
                              glm::length(camPosition - pos2);
                   });
+
+        glDisable(GL_CULL_FACE);
 
         for (auto& position : transparentPositions) {
             model = glm::mat4(1.0f);
@@ -384,28 +437,33 @@ int main() {
         }
 
         /*
-        blendingShader.use();
-        blendingShader.setMat4("view", view);
-        blendingShader.setMat4("projection", projection);
-        glBindTexture(GL_TEXTURE_2D, grassTexture);
-        for (std::size_t i = 0; i < transparentPositions.size(); ++i) {
+        if (backpackFuture.wait_for(std::chrono::seconds(0)) ==
+            std::future_status::ready) {
+            std::cout << "Ready!\n";
             model = glm::mat4(1.0f);
-            model = glm::rotate(model, glm::radians(180.0f),
-                                glm::vec3(1.0f, 0.0f, 0.0f));
-            model = glm::translate(model, transparentPositions[i]);
-            blendingShader.setMat4("model", model);
-            grassModel.draw(blendingShader);
+            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+            model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
+
+            assimpShader.use();
+            assimpShader.setMat4("model", model);
+            assimpShader.setMat4("view", view);
+            assimpShader.setMat4("projection", projection);
+            std::unique_ptr<utility::AssimpModel> backpackModel =
+                backpackFuture.get();
+            backpackModel->draw(assimpShader);
         }
+        */
 
-        model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
+        /*
+         model = glm::mat4(1.0f);
+         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+         model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
 
-        assimpShader.use();
-        assimpShader.setMat4("model", model);
-        assimpShader.setMat4("view", view);
-        assimpShader.setMat4("projection", projection);
-        backpack.draw(assimpShader);
+         assimpShader.use();
+         assimpShader.setMat4("model", model);
+         assimpShader.setMat4("view", view);
+         assimpShader.setMat4("projection", projection);
+         backpack.draw(assimpShader);
         */
 
         // IMGUI
