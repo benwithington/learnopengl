@@ -4,14 +4,16 @@
 
 namespace personal::renderer::utility {
 
-RawModel::RawModel(std::vector<float>& vertices, std::vector<float> texCoords)
+RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords)
     : numTriangles(vertices.size()) {
     // Generate Vertex Array Object
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
     // Generate the Vertex Buffer Object for the vertices
+    unsigned int verticesBuffer;
     glGenBuffers(1, &verticesBuffer);
+    vbos.push_back(verticesBuffer);
     GLuint verticesIndex = 0;
     glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0],
@@ -20,7 +22,9 @@ RawModel::RawModel(std::vector<float>& vertices, std::vector<float> texCoords)
                           3 * sizeof(float), (void*)0);
 
     // Generate the Vertex Buffer Object for the tex coords
+    unsigned int texCoordBuffer;
     glGenBuffers(1, &texCoordBuffer);
+    vbos.push_back(texCoordBuffer);
     GLuint texCoordsIndex = 1;
     glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
     glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float),
@@ -36,10 +40,58 @@ RawModel::RawModel(std::vector<float>& vertices, std::vector<float> texCoords)
     glBindVertexArray(0);
 }
 
+RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords,
+                   std::vector<float>& normals)
+    : numTriangles(vertices.size()) {
+    // Generate Vertex Array Object
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // Generate the Vertex Buffer Object for the vertices
+    unsigned int verticesBuffer;
+    glGenBuffers(1, &verticesBuffer);
+    vbos.push_back(verticesBuffer);
+    GLuint verticesIndex = 0;
+    glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0],
+                 GL_STATIC_DRAW);
+    glVertexAttribPointer(verticesIndex, 3, GL_FLOAT, GL_FALSE,
+                          3 * sizeof(float), (void*)0);
+
+    // Generate the Vertex Buffer Object for the tex coords
+    unsigned int texCoordBuffer;
+    glGenBuffers(1, &texCoordBuffer);
+    vbos.push_back(texCoordBuffer);
+    GLuint texCoordsIndex = 1;
+    glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
+    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float),
+                 &texCoords[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(texCoordsIndex, 2, GL_FLOAT, GL_FALSE,
+                          2 * sizeof(float), (void*)0);
+
+    // Generate the vertex buffer object for the normals
+    unsigned int normalBuffer;
+    glGenBuffers(1, &normalBuffer);
+    vbos.push_back(normalBuffer);
+    GLuint normalsIndex = 2;
+    glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), &normals[0],
+                 GL_STATIC_DRAW);
+    glVertexAttribPointer(normalsIndex, 3, GL_FLOAT, GL_FALSE,
+                          3 * sizeof(float), (void*)0);
+
+    // Enable attrib arrays
+    glEnableVertexAttribArray(verticesIndex);
+    glEnableVertexAttribArray(texCoordsIndex);
+    glEnableVertexAttribArray(normalsIndex);
+
+    // Unbind the VAO, resetting to default state
+    glBindVertexArray(0);
+}
+
 RawModel::~RawModel() {
     glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &verticesBuffer);
-    glDeleteBuffers(1, &texCoordBuffer);
+    for (auto b : vbos) glDeleteBuffers(1, &b);
 }
 
 void RawModel::draw(const Shader&) const {

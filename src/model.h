@@ -26,13 +26,13 @@ class Model {
 
 class RawModel : public Model {
     public:
-        RawModel(std::vector<float>& vertices, std::vector<float> texCoords);
+        RawModel(std::vector<float>& vertices, std::vector<float>& texCoords);
+        RawModel(std::vector<float>& vertices, std::vector<float>& texCoords, std::vector<float>& normals);
         ~RawModel();
         void draw(const Shader& shader) const override;
     private:
         unsigned int vao;
-        unsigned int verticesBuffer;
-        unsigned int texCoordBuffer;
+        std::vector<unsigned int> vbos;
         std::size_t numTriangles;
 };
 

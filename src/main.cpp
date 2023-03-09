@@ -65,17 +65,11 @@ int main() {
     utility::Shader blendingShader{"shaders/default.vert",
                                    "shaders/blending.frag"};
     utility::Shader skyboxShader{"shaders/skybox.vert", "shaders/skybox.frag"};
+    utility::Shader enivronmentMappingShader{"shaders/environmentmapping.vert",
+                                             "shaders/environmentmapping.frag"};
 
     // Models
     // utility::AssimpModel backpack("res/models/backpack/backpack.obj");
-
-    /*
-    std::future<std::unique_ptr<utility::AssimpModel>> backpackFuture =
-        std::async(std::launch::async, []() {
-            return std::make_unique<utility::AssimpModel>(
-                "res/models/backpack/backpack.obj");
-        });
-    */
 
     std::vector<float> cubeVertices{
         // Back face
@@ -134,6 +128,25 @@ int main() {
 
         0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
 
+    std::vector<float> cubeNormals{
+        0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f,
+        0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f,
+
+        0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+        0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+
+        -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,
+        -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,
+
+        1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+        1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+        0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,
+        0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,
+
+        0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+        0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f};
+
     std::vector<float> planeVertices{
         // positions
         5.0f, -0.5f, 5.0f, -5.0f, -0.5f, -5.0f, -5.0f, -0.5f, 5.0f,
@@ -162,7 +175,7 @@ int main() {
 
                                      0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f};
 
-    utility::RawModel cubeModel{cubeVertices, cubeTexCoords};
+    utility::RawModel cubeModel{cubeVertices, cubeTexCoords, cubeNormals};
     utility::RawModel planeModel{planeVertices, planeTexCoords};
     utility::RawModel squareModel{transparentVeritces, transparentTexCoords};
     utility::RawModel quadModel{quadVertices, quadTexCoords};
@@ -506,13 +519,23 @@ int main() {
                                  static_cast<float>(window.state.screenHeight),
                              0.1f, 100.0f);
 
-        defaultShader.use();
-        defaultShader.setMat4("model", model);
-        defaultShader.setMat4("view", view);
-        defaultShader.setMat4("projection", projection);
+        enivronmentMappingShader.use();
+        enivronmentMappingShader.setMat4("view", view);
+        enivronmentMappingShader.setMat4("projection", projection);
+        enivronmentMappingShader.setVec3("cameraPos",
+                                         window.state.camera.Position);
 
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        cubeModel.draw(defaultShader);
+
+        enivronmentMappingShader.setMat4(
+            "model", glm::translate(model, glm::vec3(-1.0f, 0.0f, 0.0f)));
+        enivronmentMappingShader.setBool("shouldReflect", true);
+        cubeModel.draw(enivronmentMappingShader);
+
+        enivronmentMappingShader.setMat4(
+            "model", glm::translate(model, glm::vec3(1.0f, 0.0f, 0.0f)));
+        enivronmentMappingShader.setBool("shouldReflect", false);
+        cubeModel.draw(enivronmentMappingShader);
 
         glDisable(GL_CULL_FACE);
         glDepthFunc(GL_LEQUAL);
