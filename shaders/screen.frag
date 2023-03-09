@@ -9,7 +9,7 @@ const float offset = 1.0 / 300.0;
 
 void main() {
     // Normal
-    // FragColor = texture(screenTexture, TexCoords);
+    FragColor = texture(screenTexture, TexCoords);
     // Invert Colours
     // FragColor = vec4(vec3(1.0 - texture(screenTexture, TexCoords)), 1.0);
     // Average Colours (greyscale)
@@ -23,7 +23,7 @@ void main() {
     */
 
     // Kernels
-
+    /*
     vec2 offsets[9] = vec2[](
         vec2(-offset, offset), vec2(0.0, offset), vec2(offset, offset),
         vec2(-offset, 0.0), vec2(0.0, 0.0), vec2(offset, 0.0),
@@ -44,4 +44,5 @@ void main() {
         col += sampleTex[i] * edgeDetectionKernel[i];
     }
     FragColor = vec4(col, 1.0);
+    */
 }

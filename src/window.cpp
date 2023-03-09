@@ -10,7 +10,7 @@ State::State(int width, int height, std::string title)
     : screenWidth(width),
       screenHeight(height),
       title(title),
-      camera(Camera{glm::vec3(0.0f, 2.5f, 10.0f)}),
+      camera(Camera{glm::vec3(0.0f, 0.0f, 5.0f)}),
       lastX(screenWidth / 2.0f),
       lastY(screenHeight / 2.0f),
       firstMouse(true),

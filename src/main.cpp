@@ -64,6 +64,7 @@ int main() {
                                  "shaders/singleColour.frag"};
     utility::Shader blendingShader{"shaders/default.vert",
                                    "shaders/blending.frag"};
+    utility::Shader skyboxShader{"shaders/skybox.vert", "shaders/skybox.frag"};
 
     // Models
     // utility::AssimpModel backpack("res/models/backpack/backpack.obj");
@@ -192,6 +193,9 @@ int main() {
     screenShader.use();
     screenShader.setInt("screenTexture", 0);
 
+    skyboxShader.use();
+    skyboxShader.setInt("skybox", 0);
+
     /*
      * Framebuffers
      * Framebuffers have standard opengl object creation
@@ -316,6 +320,17 @@ int main() {
         std::cout << "Framebuffer incomplete, ERROR!\n";
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    /*
+        Cube Maps
+    */
+    std::vector<std::string> faces{"right.jpg",  "left.jpg",  "top.jpg",
+                                   "bottom.jpg", "front.jpg", "back.jpg"};
+
+    stbi_set_flip_vertically_on_load(false);
+
+    [[maybe_unused]] unsigned int cubemapTexture =
+        utility::loadCubemap("res/textures/skybox/", faces);
 
     // Global opengl state
     glEnable(GL_DEPTH_TEST);
@@ -479,13 +494,9 @@ int main() {
         // render
         // ------
         // make sure we clear the framebuffer's content
-        glEnable(GL_DEPTH_TEST);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                 GL_STENCIL_BUFFER_BIT);
-
-        glStencilMask(0x00);
 
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = window.state.camera.GetViewMatrix();
@@ -495,127 +506,22 @@ int main() {
                                  static_cast<float>(window.state.screenHeight),
                              0.1f, 100.0f);
 
-        glEnable(GL_CULL_FACE);
-
         defaultShader.use();
-        defaultShader.setBool("showDepth", window.state.showDepth);
+        defaultShader.setMat4("model", model);
         defaultShader.setMat4("view", view);
         defaultShader.setMat4("projection", projection);
 
-        // floor
-        glBindTexture(GL_TEXTURE_2D, metalTexture);
-        defaultShader.setMat4("model", glm::mat4(1.0f));
-        planeModel.draw(defaultShader);
-
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);
-        // cubes
-        // glBindVertexArray(cubeVAO);
-        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        defaultShader.setMat4("model", model);
         cubeModel.draw(defaultShader);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        defaultShader.setMat4("model", model);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
-        cubeModel.draw(defaultShader);
-
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
-
-        singleColour.use();
-        singleColour.setMat4("view", view);
-        singleColour.setMat4("projection", projection);
-        float scale = 1.1f;
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        model = glm::scale(model, glm::vec3(scale, scale, scale));
-        singleColour.setMat4("model", model);
-        cubeModel.draw(singleColour);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(scale, scale, scale));
-        singleColour.setMat4("model", model);
-        cubeModel.draw(singleColour);
-
-        glBindVertexArray(0);
-        glStencilMask(0xFF);
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glEnable(GL_DEPTH_TEST);
-
-        defaultShader.use();
-        defaultShader.setMat4("view", view);
-        defaultShader.setMat4("projection", projection);
-        glBindTexture(GL_TEXTURE_2D, windowTexture);
-
-        glm::vec3 camPosition = window.state.camera.Position;
-        std::sort(transparentPositions.begin(), transparentPositions.end(),
-                  [&camPosition](const glm::vec3& pos1, const glm::vec3& pos2) {
-                      return glm::length(camPosition - pos1) <=
-                             glm::length(camPosition - pos2);
-                  });
 
         glDisable(GL_CULL_FACE);
-
-        for (auto& position : transparentPositions) {
-            model = glm::mat4(1.0f);
-            model = glm::rotate(model, glm::radians(180.0f),
-                                glm::vec3(1.0f, 0.0f, 0.0f));
-            model = glm::translate(model, position);
-            defaultShader.setMat4("model", model);
-            squareModel.draw(defaultShader);
-        }
-
-        /*
-        if (backpackFuture.wait_for(std::chrono::seconds(0)) ==
-            std::future_status::ready) {
-            std::cout << "Ready!\n";
-            model = glm::mat4(1.0f);
-            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-            model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
-
-            assimpShader.use();
-            assimpShader.setMat4("model", model);
-            assimpShader.setMat4("view", view);
-            assimpShader.setMat4("projection", projection);
-            std::unique_ptr<utility::AssimpModel> backpackModel =
-                backpackFuture.get();
-            backpackModel->draw(assimpShader);
-        }
-        */
-
-        /*
-         model = glm::mat4(1.0f);
-         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-         model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
-
-         assimpShader.use();
-         assimpShader.setMat4("model", model);
-         assimpShader.setMat4("view", view);
-         assimpShader.setMat4("projection", projection);
-         backpack.draw(assimpShader);
-        */
-
-        /*
-             After rendering everything to the framebuffer
-        */
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        screenShader.use();
-        glDisable(GL_DEPTH_TEST);
-        glBindTexture(GL_TEXTURE_2D, textureAttachment);
-        quadModel.draw(screenShader);
-        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+        skyboxShader.use();
+        skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
+        skyboxShader.setMat4("projection", projection);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        cubeModel.draw(skyboxShader);
+        glDepthFunc(GL_LESS);
 
         // IMGUI
         ImGui::ShowDemoWindow();
