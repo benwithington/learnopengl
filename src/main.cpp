@@ -152,9 +152,19 @@ int main() {
 
                                             0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f};
 
+    std::vector<float> quadVertices{
+        -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, -1.0f, -1.0f, 0.0f,
+
+        -1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f,  -1.0f, 0.0f};
+
+    std::vector<float> quadTexCoords{0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+
+                                     0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f};
+
     utility::RawModel cubeModel{cubeVertices, cubeTexCoords};
     utility::RawModel planeModel{planeVertices, planeTexCoords};
     utility::RawModel squareModel{transparentVeritces, transparentTexCoords};
+    utility::RawModel quadModel{quadVertices, quadTexCoords};
 
     std::vector<glm::vec3> transparentPositions;
     transparentPositions.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
@@ -244,6 +254,7 @@ int main() {
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     /*
         The main difference between a texture attachment and a regular texture
@@ -271,6 +282,7 @@ int main() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8,
                  window.state.screenWidth, window.state.screenHeight, 0,
                  GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                            GL_TEXTURE_2D, depth_stencil_textureAttachment, 0);
@@ -293,13 +305,17 @@ int main() {
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
                           window.state.screenWidth, window.state.screenHeight);
 
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                               GL_RENDERBUFFER, rbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
         std::cout << "Complete Framebuffer\n";
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else {
+        std::cout << "Framebuffer incomplete, ERROR!\n";
     }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Global opengl state
     glEnable(GL_DEPTH_TEST);
@@ -463,6 +479,8 @@ int main() {
         // render
         // ------
         // make sure we clear the framebuffer's content
+        glEnable(GL_DEPTH_TEST);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                 GL_STENCIL_BUFFER_BIT);
@@ -584,6 +602,20 @@ int main() {
          assimpShader.setMat4("projection", projection);
          backpack.draw(assimpShader);
         */
+
+        /*
+             After rendering everything to the framebuffer
+        */
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        screenShader.use();
+        glDisable(GL_DEPTH_TEST);
+        glBindTexture(GL_TEXTURE_2D, textureAttachment);
+        quadModel.draw(screenShader);
+        glEnable(GL_DEPTH_TEST);
 
         // IMGUI
         ImGui::ShowDemoWindow();
