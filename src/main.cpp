@@ -392,6 +392,25 @@ int main() {
         data from file and copying it into the buffer's memory.
     */
 
+    // Uniform buffer objects
+
+    unsigned int uniformBlockIndexDefault =
+        glGetUniformBlockIndex(defaultShader.ID, "matrices");
+    unsigned int uniformBlockIndexEnviro =
+        glGetUniformBlockIndex(enivronmentMappingShader.ID, "matrices");
+
+    glUniformBlockBinding(defaultShader.ID, uniformBlockIndexDefault, 0);
+    glUniformBlockBinding(enivronmentMappingShader.ID, uniformBlockIndexEnviro,
+                          0);
+
+    unsigned int uboMats;
+    glGenBuffers(1, &uboMats);
+    glBindBuffer(GL_UNIFORM_BUFFER, uboMats);
+    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr,
+                 GL_STATIC_DRAW);
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMats, 0, 2 * sizeof(glm::mat4));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     // Global opengl state
     glEnable(GL_DEPTH_TEST);
     /*
@@ -566,11 +585,16 @@ int main() {
                                  static_cast<float>(window.state.screenHeight),
                              0.1f, 100.0f);
 
+        glBindBuffer(GL_UNIFORM_BUFFER, uboMats);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                        glm::value_ptr(projection));
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
+                        glm::value_ptr(view));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
         defaultShader.use();
         defaultShader.setMat4(
             "model", glm::translate(model, glm::vec3(0.0f, -0.001f, 0.0f)));
-        defaultShader.setMat4("view", view);
-        defaultShader.setMat4("projection", projection);
         glBindTexture(GL_TEXTURE_2D, metalTexture);
         planeModel.draw(defaultShader);
 
@@ -581,8 +605,6 @@ int main() {
         cubeModel.draw(defaultShader);
 
         enivronmentMappingShader.use();
-        enivronmentMappingShader.setMat4("view", view);
-        enivronmentMappingShader.setMat4("projection", projection);
         enivronmentMappingShader.setVec3("cameraPos",
                                          window.state.camera.Position);
 
