@@ -10,6 +10,7 @@ RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords)
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
+    /*
     // Generate the Vertex Buffer Object for the vertices
     unsigned int verticesBuffer;
     glGenBuffers(1, &verticesBuffer);
@@ -35,6 +36,28 @@ RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords)
     // Enable attrib arrays
     glEnableVertexAttribArray(verticesIndex);
     glEnableVertexAttribArray(texCoordsIndex);
+    */
+
+    unsigned int vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    glBufferData(GL_ARRAY_BUFFER,
+                 (vertices.size() + texCoords.size()) * sizeof(float), nullptr,
+                 GL_STATIC_DRAW);
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float),
+                    &vertices[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
+                    texCoords.size() * sizeof(float), &texCoords[0]);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                          (void*)(vertices.size() * sizeof(float)));
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
     // Unbind the VAO, resetting to default state
     glBindVertexArray(0);

@@ -345,6 +345,53 @@ int main() {
     [[maybe_unused]] unsigned int cubemapTexture =
         utility::loadCubemap("res/textures/skybox/", faces);
 
+    // Modifying Buffer data
+    /*
+        glBufferSubData can be used to update the contents of a buffer,
+        a call to glBufferData is necessary before calling glBufferSubdata.
+        glBufferSubData requires an offset parameter which specifies where
+        we want to fill the buffer from
+
+        glBufferSubData(GL_ARRAY_BUFFER, 24, sizeof(data), &data);
+        // Range: [24, 24 + sizeof(data)]
+    */
+
+    unsigned int unusedVAO;
+    glGenVertexArrays(1, &unusedVAO);
+    glBindVertexArray(unusedVAO);
+
+    float data[] = {0.5f, 1.0f, -0.35f};
+
+    unsigned int unusedVBO;
+    glGenBuffers(1, &unusedVBO);
+    glBindBuffer(GL_VERTEX_ARRAY, unusedVBO);
+    glBufferData(GL_VERTEX_ARRAY, 3 * sizeof(float), &data[0], GL_STATIC_DRAW);
+
+    /*
+        Another way of getting data into a buffer is to ask for a pointer to the
+        buffers memory using glMapBuffer
+    */
+
+    void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    memcpy(ptr, data, sizeof(data));
+
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    glBindVertexArray(0);
+
+    glDeleteVertexArrays(1, &unusedVAO);
+    glDeleteBuffers(1, &unusedVBO);
+
+    /*
+        By telling OpenGL we're finished with the pointer operations via
+        glUnmapBuffer, OpenGL knows you're done. By unmapping, the pointer
+        becomes invalid and the function returns GL_TRUE if OpenGL was able to
+        map your data successfully to the buffer.
+
+        Using glMapBuffer is useful for directly mapping data to a buffer,
+        without first storing it in temporary memory. Think of directly reading
+        data from file and copying it into the buffer's memory.
+    */
+
     // Global opengl state
     glEnable(GL_DEPTH_TEST);
     /*
@@ -518,6 +565,20 @@ int main() {
                              static_cast<float>(window.state.screenWidth) /
                                  static_cast<float>(window.state.screenHeight),
                              0.1f, 100.0f);
+
+        defaultShader.use();
+        defaultShader.setMat4(
+            "model", glm::translate(model, glm::vec3(0.0f, -0.001f, 0.0f)));
+        defaultShader.setMat4("view", view);
+        defaultShader.setMat4("projection", projection);
+        glBindTexture(GL_TEXTURE_2D, metalTexture);
+        planeModel.draw(defaultShader);
+
+        defaultShader.setMat4(
+            "model", glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        cubeModel.draw(defaultShader);
 
         enivronmentMappingShader.use();
         enivronmentMappingShader.setMat4("view", view);
