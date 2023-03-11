@@ -79,7 +79,8 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    utility::Shader assimpShader{"shaders/default.vert", "shaders/assimp.frag"};
+    utility::Shader assimpShader{"shaders/assimp.vert", "shaders/assimp.frag",
+                                 "shaders/assimp.geom"};
     utility::Shader geomShader("shaders/geometry.vert", "shaders/geometry.frag",
                                "shaders/geometry.geom");
     utility::Shader skyboxShader{"shaders/skybox.vert", "shaders/skybox.frag"};
@@ -183,10 +184,10 @@ int main() {
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     std::vector<float> points{
-        -0.5f, 0.5f,   // top-left
-        0.5f,  0.5f,   // top-right
-        0.5f,  -0.5f,  // bottom-right
-        -0.5f, -0.5f   // bottom-left
+        -0.5f, 0.5f,  1.0f, 0.0f, 0.0f,  // top-left
+        0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  // top-right
+        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f,  // bottom-right
+        -0.5f, -0.5f, 1.0f, 1.0f, 0.0f   // bottom-left
     };
     unsigned int VBO, VAO;
     glGenBuffers(1, &VBO);
@@ -196,13 +197,11 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), &points[0],
                  GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
-
-    /*
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                           (void*)(2 * sizeof(float)));
-    */
+
     glBindVertexArray(0);
 
     // render loop
@@ -249,12 +248,15 @@ int main() {
 
         assimpShader.use();
         assimpShader.setMat4("model", model);
+        assimpShader.setFloat("time", static_cast<float>(currentFrame));
         backpack.draw(assimpShader);
 
         // draw points
+        /*
         geomShader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_POINTS, 0, 4);
+        */
 
         // skybox
         glDepthFunc(GL_LEQUAL);
