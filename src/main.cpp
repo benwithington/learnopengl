@@ -89,6 +89,8 @@ int main() {
     utility::Shader normalsShader{"shaders/show_normals.vert",
                                   "shaders/show_normals.frag",
                                   "shaders/show_normals.geom"};
+    utility::Shader instancingShader{"shaders/instancing.vert",
+                                     "shaders/instancing.frag"};
 
     // Load CubeMaps
     // -------------
@@ -165,7 +167,7 @@ int main() {
 
     // Load Assimp Models
     // -----------
-    utility::AssimpModel backpack{"res/models/backpack/backpack.obj"};
+    // utility::AssimpModel backpack{"res/models/backpack/backpack.obj"};
 
     // pre-frame shader config
     // -----------------------
@@ -213,6 +215,55 @@ int main() {
 
     glBindVertexArray(0);
 
+    std::vector<float> quadVerts{
+        -0.05f, 0.05f, 1.0f,   0.0f,   0.0f, 0.05f, -0.05f, 0.0f,
+        1.0f,   0.0f,  -0.05f, -0.05f, 0.0f, 0.0f,  1.0f,
+
+        -0.05f, 0.05f, 1.0f,   0.0f,   0.0f, 0.05f, -0.05f, 0.0f,
+        1.0f,   0.0f,  0.05f,  0.05f,  0.0f, 1.0f,  1.0f};
+
+    unsigned int quadvao;
+    glGenVertexArrays(1, &quadvao);
+    glBindVertexArray(quadvao);
+
+    unsigned int quadvbo;
+    glGenBuffers(1, &quadvbo);
+    glBindBuffer(GL_ARRAY_BUFFER, quadvbo);
+    glBufferData(GL_ARRAY_BUFFER, quadVerts.size() * sizeof(float),
+                 &quadVerts[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void*)(2 * sizeof(float)));
+
+    std::vector<glm::vec2> translations;
+    float offset = 0.1f;
+    for (int y = -10; y < 10; y += 2) {
+        for (int x = -10; x < 10; x += 2) {
+            translations.emplace_back(
+                glm::vec2((static_cast<float>(x) / 10.0f) + offset,
+                          (static_cast<float>(y) / 10.0f) + offset));
+        }
+    }
+
+    unsigned int instancevbo;
+    glGenBuffers(1, &instancevbo);
+    glBindBuffer(GL_ARRAY_BUFFER, instancevbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * translations.size(),
+                 &translations[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                          (void*)0);
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribDivisor(2, 1);
+    glBindVertexArray(0);
+
     // render loop
     // -----------
     while (!window.shouldClose()) {
@@ -246,42 +297,9 @@ int main() {
                                  static_cast<float>(window.state.screenHeight),
                              0.1f, 100.0f);
 
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
-                        glm::value_ptr(projection));
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
-                        glm::value_ptr(view));
-
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-        assimpShaderWithoutGeom.use();
-        assimpShaderWithoutGeom.setMat4("model", model);
-        backpack.draw(assimpShaderWithoutGeom);
-
-        normalsShader.use();
-        normalsShader.setMat4("model", model);
-        normalsShader.setMat4("view", view);
-        normalsShader.setMat4("projection", projection);
-        backpack.draw(normalsShader);
-
-        // draw points
-        /*
-        geomShader.use();
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_POINTS, 0, 4);
-        */
-
-        // skybox
-        glDepthFunc(GL_LEQUAL);
-
-        skyboxShader.use();
-        skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
-        skyboxShader.setMat4("projection", projection);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubeMap);
-        cube.draw(skyboxShader);
-
-        glDepthFunc(GL_LESS);
+        instancingShader.use();
+        glBindVertexArray(quadvao);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
 
         // ImGui::ShowDemoWindow();
 
