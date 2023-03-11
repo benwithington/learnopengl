@@ -21,37 +21,7 @@
 
 using namespace personal::renderer;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
-
 int main() {
-    // glfw: initialize and configure
-    // ------------------------------
-    /*
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    // glfw window creation
-    // --------------------
-    GLFWwindow* window =
-        glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    */
-
     utility::Window window{};
 
     // glad: load all OpenGL function pointers
@@ -77,200 +47,23 @@ int main() {
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
-    // build and compile shaders
-    // -------------------------
-    utility::Shader assimpShader{"shaders/assimp.vert", "shaders/assimp.frag",
-                                 "shaders/assimp.geom"};
-    utility::Shader assimpShaderWithoutGeom{"shaders/assimp.vert",
-                                            "shaders/assimp.frag"};
-    utility::Shader geomShader("shaders/geometry.vert", "shaders/geometry.frag",
-                               "shaders/geometry.geom");
-    utility::Shader skyboxShader{"shaders/skybox.vert", "shaders/skybox.frag"};
-    utility::Shader normalsShader{"shaders/show_normals.vert",
-                                  "shaders/show_normals.frag",
-                                  "shaders/show_normals.geom"};
-    utility::Shader instancingShader{"shaders/instancing.vert",
-                                     "shaders/instancing.frag"};
-
-    // Load CubeMaps
-    // -------------
-    std::vector<std::string> faces{"right.jpg",  "left.jpg",  "top.jpg",
-                                   "bottom.jpg", "front.jpg", "back.jpg"};
-
-    [[maybe_unused]] unsigned int skyboxCubeMap{
-        utility::loadCubemap("res/textures/skybox/", faces)};
-
-    // Load Textures
-    // -------------
     stbi_set_flip_vertically_on_load(true);
 
-    [[maybe_unused]] unsigned int cubeTexture{
-        utility::loadTexture("res/textures/container.jpg")};
+    utility::Shader asteroidShader("shaders/asteroid.vert",
+                                   "shaders/asteroid.frag");
+    utility::Shader planetShader("shaders/planet.vert", "shaders/planet.frag");
 
-    // Model vertices data
-    // -------------------
-    std::vector<float> cubePositions{
-        // Back face
-        -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f,
-        -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f,
-        // Front face
-        -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,
-        0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f,
-        // Left face
-        -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f,
+    utility::AssimpModel rock("res/models/rock/rock.obj");
+    utility::AssimpModel planet("res/models/planet/planet.obj");
 
-        0.5f, 0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f,
-        -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f,
-        // Bottom face
-        -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f,
-        // Top face
-        -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f,
-        0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f};
-
-    std::vector<float> cubeTexCoords{
-        0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-
-        0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-
-        1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-
-        1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-
-        0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-
-        0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
-
-    std::vector<float> cubeNormals{
-        0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f,
-        0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f,
-
-        0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-        0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-
-        -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,
-        -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,
-
-        1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-        1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-        0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,
-        0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f,
-
-        0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-        0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f};
-
-    // Load Raw Models
-    // ---------------
-    utility::RawModel cube{cubePositions, cubeTexCoords, cubeNormals};
-
-    // Load Assimp Models
-    // -----------
-    // utility::AssimpModel backpack{"res/models/backpack/backpack.obj"};
-    utility::AssimpModel mars{"res/models/planet/planet.obj"};
-    utility::AssimpModel asteroid{"res/models/rock/rock.obj"};
-
-    // pre-frame shader config
-    // -----------------------
-    assimpShader.use();
-    assimpShader.setInt("texture_diffuse1", 0);
-    assimpShader.setUniformBlockBinding("matrices", 0);
-
-    assimpShaderWithoutGeom.use();
-    assimpShaderWithoutGeom.setInt("texture_diffuse1", 0);
-    assimpShaderWithoutGeom.setUniformBlockBinding("matrices", 0);
-
-    skyboxShader.use();
-    skyboxShader.setInt("skybox", 0);
-
-    // uniform buffer objects
-    // ----------------------
-    unsigned int ubo;
-    glGenBuffers(1, &ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr,
-                 GL_STATIC_DRAW);
-    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2 * sizeof(glm::mat4));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------
-    std::vector<float> points{
-        -0.5f, 0.5f,  1.0f, 0.0f, 0.0f,  // top-left
-        0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  // top-right
-        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f,  // bottom-right
-        -0.5f, -0.5f, 1.0f, 1.0f, 0.0f   // bottom-left
-    };
-    unsigned int VBO, VAO;
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), &points[0],
-                 GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)(2 * sizeof(float)));
-
-    glBindVertexArray(0);
-
-    std::vector<float> quadVerts{
-        -0.05f, 0.05f, 1.0f,   0.0f,   0.0f, 0.05f, -0.05f, 0.0f,
-        1.0f,   0.0f,  -0.05f, -0.05f, 0.0f, 0.0f,  1.0f,
-
-        -0.05f, 0.05f, 1.0f,   0.0f,   0.0f, 0.05f, -0.05f, 0.0f,
-        1.0f,   0.0f,  0.05f,  0.05f,  0.0f, 1.0f,  1.0f};
-
-    unsigned int quadvao;
-    glGenVertexArrays(1, &quadvao);
-    glBindVertexArray(quadvao);
-
-    unsigned int quadvbo;
-    glGenBuffers(1, &quadvbo);
-    glBindBuffer(GL_ARRAY_BUFFER, quadvbo);
-    glBufferData(GL_ARRAY_BUFFER, quadVerts.size() * sizeof(float),
-                 &quadVerts[0], GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)(2 * sizeof(float)));
-
-    std::vector<glm::vec2> translations;
-    float offset = 0.1f;
-    for (int y = -10; y < 10; y += 2) {
-        for (int x = -10; x < 10; x += 2) {
-            translations.emplace_back(
-                glm::vec2((static_cast<float>(x) / 10.0f) + offset,
-                          (static_cast<float>(y) / 10.0f) + offset));
-        }
-    }
-
-    unsigned int instancevbo;
-    glGenBuffers(1, &instancevbo);
-    glBindBuffer(GL_ARRAY_BUFFER, instancevbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * translations.size(),
-                 &translations[0], GL_STATIC_DRAW);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                          (void*)0);
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glVertexAttribDivisor(2, 1);
-    glBindVertexArray(0);
-
-    unsigned int amount = 1000;
-    std::vector<glm::mat4> modelMatrices;
+    unsigned int amount = 100000;
+    glm::mat4* modelMatrices;
+    modelMatrices = new glm::mat4[amount];
     srand(static_cast<unsigned int>(glfwGetTime()));  // initialize random seed
-    float radius = 50.0;
-    offset = 2.5f;
+    float radius = 150.0;
+    float offset = 25.0f;
     for (unsigned int i = 0; i < amount; i++) {
         glm::mat4 model = glm::mat4(1.0f);
         // 1. translation: displace along circle with 'radius' in range
@@ -280,24 +73,62 @@ int main() {
             (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
         float x = sin(angle) * radius + displacement;
         displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float y =
-            displacement *
-            0.4f;  // keep height of field smaller compared to width of x and z
+        float y = displacement * 0.4f;  // keep height of asteroid field smaller
+                                        // compared to width of x and z
         displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
         float z = cos(angle) * radius + displacement;
         model = glm::translate(model, glm::vec3(x, y, z));
 
-        // 2. scale: scale between 0.05 and 0.25f
-        float scale = (rand() % 20) / 100.0f + 0.05f;
+        // 2. scale: Scale between 0.05 and 0.25f
+        float scale = static_cast<float>((rand() % 20) / 100.0 + 0.05);
         model = glm::scale(model, glm::vec3(scale));
 
         // 3. rotation: add random rotation around a (semi)randomly picked
         // rotation axis vector
-        float rotAngle = static_cast<float>(rand() % 360);
+        float rotAngle = static_cast<float>((rand() % 360));
         model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
 
         // 4. now add to list of matrices
-        modelMatrices.push_back(model);
+        modelMatrices[i] = model;
+    }
+
+    // configure instanced array
+    // -------------------------
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0],
+                 GL_STATIC_DRAW);
+
+    // set transformation matrices as an instance vertex attribute (with divisor
+    // 1) note: we're cheating a little by taking the, now publicly declared,
+    // VAO of the model's mesh(es) and adding new vertexAttribPointers normally
+    // you'd want to do this in a more organized fashion, but for learning
+    // purposes this will do.
+    // -----------------------------------------------------------------------------------------------------------------------------------
+    for (unsigned int i = 0; i < rock.meshes.size(); i++) {
+        unsigned int VAO = rock.meshes[i].VAO;
+        glBindVertexArray(VAO);
+        // set attribute pointers for matrix (4 times vec4)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                              (void*)0);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                              (void*)(sizeof(glm::vec4)));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                              (void*)(2 * sizeof(glm::vec4)));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                              (void*)(3 * sizeof(glm::vec4)));
+
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+
+        glBindVertexArray(0);
     }
 
     // render loop
@@ -319,39 +150,46 @@ int main() {
         // ------------------
         window.processInput();
 
-        // render
-        // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-                GL_STENCIL_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 model = glm::mat4(1.0f);
+        // configure transformation matrices
+        glm::mat4 projection = glm::perspective(
+            glm::radians(45.0f),
+            (float)window.state.screenWidth / (float)window.state.screenHeight,
+            0.1f, 1000.0f);
         glm::mat4 view = window.state.camera.GetViewMatrix();
-        glm::mat4 projection =
-            glm::perspective(glm::radians(45.0f),
-                             static_cast<float>(window.state.screenWidth) /
-                                 static_cast<float>(window.state.screenHeight),
-                             0.1f, 1000.0f);
+        asteroidShader.use();
+        asteroidShader.setMat4("projection", projection);
+        asteroidShader.setMat4("view", view);
+        planetShader.use();
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
 
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
-                        glm::value_ptr(projection));
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
-                        glm::value_ptr(view));
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-        assimpShaderWithoutGeom.use();
+        // draw planet
+        glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-        assimpShaderWithoutGeom.setMat4("model", model);
-        mars.draw(assimpShaderWithoutGeom);
+        planetShader.setMat4("model", model);
+        planet.draw(planetShader);
 
-        for (unsigned int i = 0; i < amount; ++i) {
-            assimpShaderWithoutGeom.setMat4("model", modelMatrices[i]);
-            asteroid.draw(assimpShaderWithoutGeom);
+        // draw meteorites
+        asteroidShader.use();
+        asteroidShader.setInt("texture_diffuse1", 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(
+            GL_TEXTURE_2D,
+            rock.textures_loaded[0]
+                .id);  // note: we also made the textures_loaded vector public
+                       // (instead of private) from the model class.
+        for (unsigned int i = 0; i < rock.meshes.size(); i++) {
+            glBindVertexArray(rock.meshes[i].VAO);
+            glDrawElementsInstanced(
+                GL_TRIANGLES,
+                static_cast<unsigned int>(rock.meshes[i].indices.size()),
+                GL_UNSIGNED_INT, 0, amount);
+            glBindVertexArray(0);
         }
-
-        // ImGui::ShowDemoWindow();
 
         // ImGui end frame
         // ---------------
@@ -367,8 +205,6 @@ int main() {
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
 
     // shutdown imgui
     // --------------
@@ -376,16 +212,8 @@ int main() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
+    delete[] modelMatrices;
+
     glfwTerminate();
     return 0;
-}
-
-// glfw: whenever the window size changed (by OS or user resize) this callback
-// function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow*, int width, int height) {
-    // make sure the viewport matches the new window dimensions; note that width
-    // and height will be significantly larger than specified on retina
-    // displays.
-    glViewport(0, 0, width, height);
 }
