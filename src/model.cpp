@@ -4,23 +4,22 @@
 
 namespace personal::renderer::utility {
 
-RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords)
-    : numTriangles(vertices.size()) {
+RawModel::RawModel(std::vector<float>& positions, std::vector<float>& texCoords)
+    : numTriangles(positions.size()) {
     // Generate Vertex Array Object
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
     /*
-    // Generate the Vertex Buffer Object for the vertices
-    unsigned int verticesBuffer;
-    glGenBuffers(1, &verticesBuffer);
-    vbos.push_back(verticesBuffer);
-    GLuint verticesIndex = 0;
-    glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0],
-                 GL_STATIC_DRAW);
-    glVertexAttribPointer(verticesIndex, 3, GL_FLOAT, GL_FALSE,
-                          3 * sizeof(float), (void*)0);
+    // Generate the Vertex Buffer Object for the positions
+    unsigned int positionsBuffer;
+    glGenBuffers(1, &positionsBuffer);
+    vbos.push_back(positionsBuffer);
+    GLuint positionsIndex = 0;
+    glBindBuffer(GL_ARRAY_BUFFER, positionsBuffer);
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float),
+    &positions[0], GL_STATIC_DRAW); glVertexAttribPointer(positionsIndex, 3,
+    GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     // Generate the Vertex Buffer Object for the tex coords
     unsigned int texCoordBuffer;
@@ -34,7 +33,7 @@ RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords)
                           2 * sizeof(float), (void*)0);
 
     // Enable attrib arrays
-    glEnableVertexAttribArray(verticesIndex);
+    glEnableVertexAttribArray(positionsIndex);
     glEnableVertexAttribArray(texCoordsIndex);
     */
 
@@ -43,18 +42,18 @@ RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords)
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     glBufferData(GL_ARRAY_BUFFER,
-                 (vertices.size() + texCoords.size()) * sizeof(float), nullptr,
+                 (positions.size() + texCoords.size()) * sizeof(float), nullptr,
                  GL_STATIC_DRAW);
 
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float),
-                    &vertices[0]);
-    glBufferSubData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
+    glBufferSubData(GL_ARRAY_BUFFER, 0, positions.size() * sizeof(float),
+                    &positions[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, positions.size() * sizeof(float),
                     texCoords.size() * sizeof(float), &texCoords[0]);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
                           (void*)0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                          (void*)(vertices.size() * sizeof(float)));
+                          (void*)(positions.size() * sizeof(float)));
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -63,22 +62,22 @@ RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords)
     glBindVertexArray(0);
 }
 
-RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords,
+RawModel::RawModel(std::vector<float>& positions, std::vector<float>& texCoords,
                    std::vector<float>& normals)
-    : numTriangles(vertices.size()) {
+    : numTriangles(positions.size()) {
     // Generate Vertex Array Object
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    // Generate the Vertex Buffer Object for the vertices
-    unsigned int verticesBuffer;
-    glGenBuffers(1, &verticesBuffer);
-    vbos.push_back(verticesBuffer);
-    GLuint verticesIndex = 0;
-    glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0],
-                 GL_STATIC_DRAW);
-    glVertexAttribPointer(verticesIndex, 3, GL_FLOAT, GL_FALSE,
+    // Generate the Vertex Buffer Object for the positions
+    unsigned int positionsBuffer;
+    glGenBuffers(1, &positionsBuffer);
+    vbos.push_back(positionsBuffer);
+    GLuint positionsIndex = 0;
+    glBindBuffer(GL_ARRAY_BUFFER, positionsBuffer);
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float),
+                 &positions[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(positionsIndex, 3, GL_FLOAT, GL_FALSE,
                           3 * sizeof(float), (void*)0);
 
     // Generate the Vertex Buffer Object for the tex coords
@@ -104,7 +103,7 @@ RawModel::RawModel(std::vector<float>& vertices, std::vector<float>& texCoords,
                           3 * sizeof(float), (void*)0);
 
     // Enable attrib arrays
-    glEnableVertexAttribArray(verticesIndex);
+    glEnableVertexAttribArray(positionsIndex);
     glEnableVertexAttribArray(texCoordsIndex);
     glEnableVertexAttribArray(normalsIndex);
 

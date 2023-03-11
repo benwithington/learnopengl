@@ -80,6 +80,12 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath,
 
 void Shader::use() { glUseProgram(ID); }
 
+void Shader::setUniformBlockBinding(const std::string& name,
+                                    unsigned int bindIndex) const {
+    glUniformBlockBinding(ID, glGetUniformBlockIndex(ID, name.c_str()),
+                          bindIndex);
+}
+
 void Shader::setBool(const std::string& name, bool value) const {
     glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
 }
