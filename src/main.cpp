@@ -81,9 +81,14 @@ int main() {
     // -------------------------
     utility::Shader assimpShader{"shaders/assimp.vert", "shaders/assimp.frag",
                                  "shaders/assimp.geom"};
+    utility::Shader assimpShaderWithoutGeom{"shaders/assimp.vert",
+                                            "shaders/assimp.frag"};
     utility::Shader geomShader("shaders/geometry.vert", "shaders/geometry.frag",
                                "shaders/geometry.geom");
     utility::Shader skyboxShader{"shaders/skybox.vert", "shaders/skybox.frag"};
+    utility::Shader normalsShader{"shaders/show_normals.vert",
+                                  "shaders/show_normals.frag",
+                                  "shaders/show_normals.geom"};
 
     // Load CubeMaps
     // -------------
@@ -168,6 +173,10 @@ int main() {
     assimpShader.setInt("texture_diffuse1", 0);
     assimpShader.setUniformBlockBinding("matrices", 0);
 
+    assimpShaderWithoutGeom.use();
+    assimpShaderWithoutGeom.setInt("texture_diffuse1", 0);
+    assimpShaderWithoutGeom.setUniformBlockBinding("matrices", 0);
+
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
@@ -232,7 +241,7 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = window.state.camera.GetViewMatrix();
         glm::mat4 projection =
-            glm::perspective(glm::radians(window.state.camera.Zoom),
+            glm::perspective(glm::radians(45.0f),
                              static_cast<float>(window.state.screenWidth) /
                                  static_cast<float>(window.state.screenHeight),
                              0.1f, 100.0f);
@@ -246,10 +255,15 @@ int main() {
 
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        assimpShader.use();
-        assimpShader.setMat4("model", model);
-        assimpShader.setFloat("time", static_cast<float>(currentFrame));
-        backpack.draw(assimpShader);
+        assimpShaderWithoutGeom.use();
+        assimpShaderWithoutGeom.setMat4("model", model);
+        backpack.draw(assimpShaderWithoutGeom);
+
+        normalsShader.use();
+        normalsShader.setMat4("model", model);
+        normalsShader.setMat4("view", view);
+        normalsShader.setMat4("projection", projection);
+        backpack.draw(normalsShader);
 
         // draw points
         /*
