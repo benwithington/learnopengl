@@ -168,6 +168,8 @@ int main() {
     // Load Assimp Models
     // -----------
     // utility::AssimpModel backpack{"res/models/backpack/backpack.obj"};
+    utility::AssimpModel mars{"res/models/planet/planet.obj"};
+    utility::AssimpModel asteroid{"res/models/rock/rock.obj"};
 
     // pre-frame shader config
     // -----------------------
@@ -264,6 +266,40 @@ int main() {
     glVertexAttribDivisor(2, 1);
     glBindVertexArray(0);
 
+    unsigned int amount = 1000;
+    std::vector<glm::mat4> modelMatrices;
+    srand(static_cast<unsigned int>(glfwGetTime()));  // initialize random seed
+    float radius = 50.0;
+    offset = 2.5f;
+    for (unsigned int i = 0; i < amount; i++) {
+        glm::mat4 model = glm::mat4(1.0f);
+        // 1. translation: displace along circle with 'radius' in range
+        // [-offset, offset]
+        float angle = (float)i / (float)amount * 360.0f;
+        float displacement =
+            (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float x = sin(angle) * radius + displacement;
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float y =
+            displacement *
+            0.4f;  // keep height of field smaller compared to width of x and z
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float z = cos(angle) * radius + displacement;
+        model = glm::translate(model, glm::vec3(x, y, z));
+
+        // 2. scale: scale between 0.05 and 0.25f
+        float scale = (rand() % 20) / 100.0f + 0.05f;
+        model = glm::scale(model, glm::vec3(scale));
+
+        // 3. rotation: add random rotation around a (semi)randomly picked
+        // rotation axis vector
+        float rotAngle = static_cast<float>(rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+        // 4. now add to list of matrices
+        modelMatrices.push_back(model);
+    }
+
     // render loop
     // -----------
     while (!window.shouldClose()) {
@@ -295,11 +331,25 @@ int main() {
             glm::perspective(glm::radians(45.0f),
                              static_cast<float>(window.state.screenWidth) /
                                  static_cast<float>(window.state.screenHeight),
-                             0.1f, 100.0f);
+                             0.1f, 1000.0f);
 
-        instancingShader.use();
-        glBindVertexArray(quadvao);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                        glm::value_ptr(projection));
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
+                        glm::value_ptr(view));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        assimpShaderWithoutGeom.use();
+        model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+        assimpShaderWithoutGeom.setMat4("model", model);
+        mars.draw(assimpShaderWithoutGeom);
+
+        for (unsigned int i = 0; i < amount; ++i) {
+            assimpShaderWithoutGeom.setMat4("model", modelMatrices[i]);
+            asteroid.draw(assimpShaderWithoutGeom);
+        }
 
         // ImGui::ShowDemoWindow();
 
