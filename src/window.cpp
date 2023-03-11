@@ -32,6 +32,8 @@ Window::Window(int width, int height, std::string title, GLFWmonitor* monitor,
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
     window = glfwCreateWindow(width, height, title.c_str(), monitor, share);
 
     if (!window) {
